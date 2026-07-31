@@ -20,8 +20,14 @@
   {% if messages %}
   <div class="mb-4">
     {% for message in messages %}
-    <div class="alert alert-{{ message.tags }} mb-2">
+    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
       {{ message }}
+      <button
+        type="button"
+        class="btn-close"
+        data-bs-dismiss="alert"
+        aria-label="Fechar"
+      ></button>
     </div>
     {% endfor %}
   </div>
@@ -111,41 +117,41 @@
                   </a>
 
                   {% if agendamento.status != "CONFIRMADO" %}
-                  <form
-                    method="post"
-                    action="{% url 'agendamentos:confirmar' agendamento.pk %}"
-                    class="d-inline"
+                  <button
+                    type="button"
+                    class="btn btn-sm btn-success rounded-pill px-3"
+                    data-bs-toggle="modal"
+                    data-bs-target="#modalConfirmar"
+                    data-url="{% url 'agendamentos:confirmar' agendamento.pk %}"
+                    data-cliente="{{ agendamento.cliente }}"
+                    data-servico="{{ agendamento.servico }}"
+                    data-barbeiro="{{ agendamento.barbeiro|default:'Não definido' }}"
+                    data-data="{{ agendamento.data|date:'d/m/Y' }}"
+                    data-horario="{{ agendamento.hora_inicio|time:'H:i' }} às {{ agendamento.hora_fim|time:'H:i' }}"
+                    data-data-iso="{{ agendamento.data|date:'Y-m-d' }}"
+                    data-hora-iso="{{ agendamento.hora_inicio|time:'H:i:s' }}"
                   >
-                    {% csrf_token %}
-
-                    <button
-                      type="submit"
-                      class="btn btn-sm btn-success rounded-pill px-3"
-                      onclick="return confirm('Confirmar este agendamento?')"
-                    >
-                      <i class="bi bi-check-lg"></i>
-                      Confirmar
-                    </button>
-                  </form>
+                    <i class="bi bi-check-lg"></i>
+                    Confirmar
+                  </button>
                   {% endif %}
 
                   {% if agendamento.status != "CANCELADO" %}
-                  <form
-                    method="post"
-                    action="{% url 'agendamentos:cancelar' agendamento.pk %}"
-                    class="d-inline"
+                  <button
+                    type="button"
+                    class="btn btn-sm btn-outline-danger rounded-pill px-3"
+                    data-bs-toggle="modal"
+                    data-bs-target="#modalCancelar"
+                    data-url="{% url 'agendamentos:cancelar' agendamento.pk %}"
+                    data-cliente="{{ agendamento.cliente }}"
+                    data-servico="{{ agendamento.servico }}"
+                    data-barbeiro="{{ agendamento.barbeiro|default:'Não definido' }}"
+                    data-data="{{ agendamento.data|date:'d/m/Y' }}"
+                    data-horario="{{ agendamento.hora_inicio|time:'H:i' }} às {{ agendamento.hora_fim|time:'H:i' }}"
                   >
-                    {% csrf_token %}
-
-                    <button
-                      type="submit"
-                      class="btn btn-sm btn-outline-danger rounded-pill px-3"
-                      onclick="return confirm('Cancelar este agendamento?')"
-                    >
-                      <i class="bi bi-x-lg"></i>
-                      Cancelar
-                    </button>
-                  </form>
+                    <i class="bi bi-x-lg"></i>
+                    Cancelar
+                  </button>
                   {% endif %}
                 </div>
               </td>
@@ -166,4 +172,232 @@
     </div>
   </div>
 </div>
+
+<!-- Modal: Confirmar agendamento -->
+<div
+  class="modal fade"
+  id="modalConfirmar"
+  tabindex="-1"
+  aria-labelledby="modalConfirmarLabel"
+  aria-hidden="true"
+>
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalConfirmarLabel">
+          Confirmar agendamento
+        </h5>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="modal"
+          aria-label="Fechar"
+        ></button>
+      </div>
+
+      <div class="modal-body">
+        <p>Confirme os dados antes de prosseguir:</p>
+
+        <dl class="row mb-0">
+          <dt class="col-sm-4">Cliente</dt>
+          <dd class="col-sm-8" id="confirmarCliente"></dd>
+
+          <dt class="col-sm-4">Serviço</dt>
+          <dd class="col-sm-8" id="confirmarServico"></dd>
+
+          <dt class="col-sm-4">Barbeiro</dt>
+          <dd class="col-sm-8" id="confirmarBarbeiro"></dd>
+
+          <dt class="col-sm-4">Data</dt>
+          <dd class="col-sm-8" id="confirmarData"></dd>
+
+          <dt class="col-sm-4">Horário</dt>
+          <dd class="col-sm-8" id="confirmarHorario"></dd>
+        </dl>
+
+        <div
+          id="alertaConfirmacaoDisponivel"
+          class="alert alert-info mt-3 mb-0"
+        >
+          O cliente e o barbeiro receberão um e-mail de confirmação.
+        </div>
+
+        <div
+          id="alertaAgendamentoPassado"
+          class="alert alert-warning mt-3 mb-0 d-none"
+        >
+          <i class="bi bi-exclamation-triangle me-1"></i>
+          Não é possível confirmar um agendamento cuja data e horário já passaram.
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button
+          type="button"
+          class="btn btn-secondary"
+          data-bs-dismiss="modal"
+        >
+          Voltar
+        </button>
+
+        <form method="post" id="formConfirmar" class="d-inline">
+          {% csrf_token %}
+          <button
+            type="submit"
+            class="btn btn-success"
+            id="botaoConfirmarAgendamento"
+          >
+            Confirmar agendamento
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Cancelar agendamento -->
+<div
+  class="modal fade"
+  id="modalCancelar"
+  tabindex="-1"
+  aria-labelledby="modalCancelarLabel"
+  aria-hidden="true"
+>
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalCancelarLabel">
+          Cancelar agendamento
+        </h5>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="modal"
+          aria-label="Fechar"
+        ></button>
+      </div>
+
+      <div class="modal-body">
+        <p>Tem certeza de que deseja cancelar este agendamento?</p>
+
+        <dl class="row mb-0">
+          <dt class="col-sm-4">Cliente</dt>
+          <dd class="col-sm-8" id="cancelarCliente"></dd>
+
+          <dt class="col-sm-4">Serviço</dt>
+          <dd class="col-sm-8" id="cancelarServico"></dd>
+
+          <dt class="col-sm-4">Barbeiro</dt>
+          <dd class="col-sm-8" id="cancelarBarbeiro"></dd>
+
+          <dt class="col-sm-4">Data</dt>
+          <dd class="col-sm-8" id="cancelarData"></dd>
+
+          <dt class="col-sm-4">Horário</dt>
+          <dd class="col-sm-8" id="cancelarHorario"></dd>
+        </dl>
+
+        <div class="alert alert-warning mt-3 mb-0">
+          Esta ação não poderá ser desfeita.
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button
+          type="button"
+          class="btn btn-secondary"
+          data-bs-dismiss="modal"
+        >
+          Voltar
+        </button>
+
+        <form method="post" id="formCancelar" class="d-inline">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-danger">
+            Cancelar agendamento
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  document
+    .getElementById("modalConfirmar")
+    .addEventListener("show.bs.modal", function (event) {
+      var botao = event.relatedTarget;
+
+      document.getElementById("confirmarCliente").textContent =
+        botao.dataset.cliente;
+
+      document.getElementById("confirmarServico").textContent =
+        botao.dataset.servico;
+
+      document.getElementById("confirmarBarbeiro").textContent =
+        botao.dataset.barbeiro;
+
+      document.getElementById("confirmarData").textContent =
+        botao.dataset.data;
+
+      document.getElementById("confirmarHorario").textContent =
+        botao.dataset.horario;
+
+      document.getElementById("formConfirmar").action =
+        botao.dataset.url;
+
+      var dataHoraAgendamento = new Date(
+        botao.dataset.dataIso + "T" + botao.dataset.horaIso
+      );
+
+      var agora = new Date();
+
+      var botaoConfirmar = document.getElementById(
+        "botaoConfirmarAgendamento"
+      );
+
+      var alertaDisponivel = document.getElementById(
+        "alertaConfirmacaoDisponivel"
+      );
+
+      var alertaPassado = document.getElementById(
+        "alertaAgendamentoPassado"
+      );
+
+      if (dataHoraAgendamento <= agora) {
+        botaoConfirmar.disabled = true;
+        botaoConfirmar.innerHTML =
+          '<i class="bi bi-lock me-1"></i> Confirmação indisponível';
+
+        alertaDisponivel.classList.add("d-none");
+        alertaPassado.classList.remove("d-none");
+      } else {
+        botaoConfirmar.disabled = false;
+        botaoConfirmar.innerHTML =
+          '<i class="bi bi-check-lg me-1"></i> Confirmar agendamento';
+
+        alertaDisponivel.classList.remove("d-none");
+        alertaPassado.classList.add("d-none");
+      }
+    });
+
+  document
+    .getElementById("modalCancelar")
+    .addEventListener("show.bs.modal", function (event) {
+      var botao = event.relatedTarget;
+
+      document.getElementById("cancelarCliente").textContent =
+        botao.dataset.cliente;
+      document.getElementById("cancelarServico").textContent =
+        botao.dataset.servico;
+      document.getElementById("cancelarBarbeiro").textContent =
+        botao.dataset.barbeiro;
+      document.getElementById("cancelarData").textContent =
+        botao.dataset.data;
+      document.getElementById("cancelarHorario").textContent =
+        botao.dataset.horario;
+
+      document.getElementById("formCancelar").action = botao.dataset.url;
+    });
+</script>
 {% endblock %}

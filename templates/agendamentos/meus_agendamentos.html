@@ -24,8 +24,14 @@
   {% if messages %}
   <div class="mb-4">
     {% for message in messages %}
-    <div class="alert alert-{{ message.tags }} mb-2">
+    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
       {{ message }}
+      <button
+        type="button"
+        class="btn-close"
+        data-bs-dismiss="alert"
+        aria-label="Fechar"
+      ></button>
     </div>
     {% endfor %}
   </div>
@@ -100,22 +106,20 @@
               Alterar
             </a>
 
-            <form
-              method="post"
-              action="{% url 'agendamentos:cancelar_meu_agendamento' agendamento.pk %}"
-              class="d-inline"
+            <button
+              type="button"
+              class="btn btn-sm btn-outline-danger rounded-pill px-3"
+              data-bs-toggle="modal"
+              data-bs-target="#modalCancelarMeu"
+              data-url="{% url 'agendamentos:cancelar_meu_agendamento' agendamento.pk %}"
+              data-servico="{{ agendamento.servico }}"
+              data-barbeiro="{{ agendamento.barbeiro|default:'Não definido' }}"
+              data-data="{{ agendamento.data|date:'d/m/Y' }}"
+              data-horario="{{ agendamento.hora_inicio|time:'H:i' }} às {{ agendamento.hora_fim|time:'H:i' }}"
             >
-              {% csrf_token %}
-
-              <button
-                type="submit"
-                class="btn btn-sm btn-outline-danger rounded-pill px-3"
-                onclick="return confirm('Deseja realmente cancelar este agendamento?')"
-              >
-                <i class="bi bi-x-circle"></i>
-                Cancelar
-              </button>
-            </form>
+              <i class="bi bi-x-circle"></i>
+              Cancelar
+            </button>
           </div>
           {% endif %}
 
@@ -144,4 +148,87 @@
   </div>
   {% endif %}
 </div>
+
+<!-- Modal: Cancelar meu agendamento -->
+<div
+  class="modal fade"
+  id="modalCancelarMeu"
+  tabindex="-1"
+  aria-labelledby="modalCancelarMeuLabel"
+  aria-hidden="true"
+>
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalCancelarMeuLabel">
+          Cancelar agendamento
+        </h5>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="modal"
+          aria-label="Fechar"
+        ></button>
+      </div>
+
+      <div class="modal-body">
+        <p>Deseja realmente cancelar este agendamento?</p>
+
+        <dl class="row mb-0">
+          <dt class="col-sm-4">Serviço</dt>
+          <dd class="col-sm-8" id="cancelarMeuServico"></dd>
+
+          <dt class="col-sm-4">Barbeiro</dt>
+          <dd class="col-sm-8" id="cancelarMeuBarbeiro"></dd>
+
+          <dt class="col-sm-4">Data</dt>
+          <dd class="col-sm-8" id="cancelarMeuData"></dd>
+
+          <dt class="col-sm-4">Horário</dt>
+          <dd class="col-sm-8" id="cancelarMeuHorario"></dd>
+        </dl>
+
+        <div class="alert alert-warning mt-3 mb-0">
+          Esta ação não poderá ser desfeita.
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button
+          type="button"
+          class="btn btn-secondary"
+          data-bs-dismiss="modal"
+        >
+          Voltar
+        </button>
+
+        <form method="post" id="formCancelarMeu" class="d-inline">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-danger">
+            Cancelar agendamento
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  document
+    .getElementById("modalCancelarMeu")
+    .addEventListener("show.bs.modal", function (event) {
+      var botao = event.relatedTarget;
+
+      document.getElementById("cancelarMeuServico").textContent =
+        botao.dataset.servico;
+      document.getElementById("cancelarMeuBarbeiro").textContent =
+        botao.dataset.barbeiro;
+      document.getElementById("cancelarMeuData").textContent =
+        botao.dataset.data;
+      document.getElementById("cancelarMeuHorario").textContent =
+        botao.dataset.horario;
+
+      document.getElementById("formCancelarMeu").action = botao.dataset.url;
+    });
+</script>
 {% endblock %}
