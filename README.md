@@ -66,11 +66,11 @@ barberflow/
 ### 1. Clone o repositório
 
 ```bash
-git clone URL_DO_REPOSITORIO
+git clone https://github.com/Ricardo2507/barberflow.git
 cd barberflow
 ```
 
-Substitua `URL_DO_REPOSITORIO` pelo endereço real do repositório.
+Substitua `https://github.com/Ricardo2507/barberflow.git` pelo endereço real do repositório.
 
 ### 2. Crie o ambiente virtual
 
