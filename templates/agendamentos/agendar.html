@@ -1,0 +1,181 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Agendar serviço | BarberFlow{% endblock %}
+
+{% block content %}
+<section class="py-5">
+    <div class="container">
+        <div class="row align-items-center g-4 mb-5">
+            <div class="col-lg-7">
+                <span class="badge text-bg-dark mb-3">
+                    <i class="bi bi-calendar-heart"></i>
+                    Agendamento online
+                </span>
+
+                <h1 class="display-5 fw-bold">
+                    Cuide do seu visual
+                </h1>
+
+                <p class="lead text-secondary">
+                    Escolha o serviço, o barbeiro e o melhor horário
+                    para você.
+                </p>
+            </div>
+
+            <div class="col-lg-5">
+                <img
+                    src="{% static 'images/banner-barbearia.jpg' %}"
+                    class="img-fluid rounded-4 shadow"
+                    alt="Interior de uma barbearia"
+                >
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm rounded-4">
+            <div class="card-body p-4 p-lg-5">
+                <div class="d-flex align-items-center mb-4">
+                    <div class="icon-box bg-dark text-white me-3">
+                        <i class="bi bi-calendar-plus"></i>
+                    </div>
+
+                    <div>
+                        <h2 class="h4 mb-1">Novo agendamento</h2>
+                        <p class="text-secondary mb-0">
+                            Preencha os dados abaixo.
+                        </p>
+                    </div>
+                </div>
+
+                <form method="post" action="{% url 'agendamentos:criar' %}">
+                    {% csrf_token %}
+
+                    <div class="row g-4">
+                        <div class="col-md-4">
+                            <label for="id_servico" class="form-label fw-semibold">
+                                <i class="bi bi-stars"></i>
+                                Serviço
+                            </label>
+
+                            <select
+                                name="servico"
+                                id="id_servico"
+                                class="form-select form-select-lg"
+                                hx-get="{% url 'agendamentos:horarios_disponiveis' %}"
+                                hx-target="#horarios-disponiveis"
+                                hx-swap="innerHTML"
+                                hx-include="#id_barbeiro, #id_data"
+                                hx-trigger="change"
+                                hx-indicator="#carregando-horarios"
+                                required
+                            >
+                                <option value="">Selecione um serviço</option>
+                                {% for servico in servicos %}
+                                    <option value="{{ servico.id }}">
+                                        {{ servico.nome }} — R$ {{ servico.preco }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label for="id_barbeiro" class="form-label fw-semibold">
+                                <i class="bi bi-person-badge"></i>
+                                Barbeiro
+                            </label>
+
+                            <select
+                                name="barbeiro"
+                                id="id_barbeiro"
+                                class="form-select form-select-lg"
+                                hx-get="{% url 'agendamentos:horarios_disponiveis' %}"
+                                hx-target="#horarios-disponiveis"
+                                hx-swap="innerHTML"
+                                hx-include="#id_servico, #id_data"
+                                hx-trigger="change"
+                                hx-indicator="#carregando-horarios"
+                                required
+                            >
+                                <option value="">Selecione um barbeiro</option>
+                                {% for barbeiro in barbeiros %}
+                                    <option value="{{ barbeiro.id }}">
+                                        {{ barbeiro }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label for="id_data" class="form-label fw-semibold">
+                                <i class="bi bi-calendar3"></i>
+                                Data
+                            </label>
+
+                            <input
+                                type="date"
+                                name="data"
+                                id="id_data"
+                                class="form-control form-control-lg"
+                                hx-get="{% url 'agendamentos:horarios_disponiveis' %}"
+                                hx-target="#horarios-disponiveis"
+                                hx-swap="innerHTML"
+                                hx-include="#id_servico, #id_barbeiro"
+                                hx-trigger="change"
+                                hx-indicator="#carregando-horarios"
+                                required
+                            >
+                        </div>
+                    </div>
+
+                    <hr class="my-5">
+
+                    <div class="d-flex align-items-center mb-3">
+                        <i class="bi bi-clock-history fs-4 me-2"></i>
+                        <h3 class="h5 mb-0">Horários disponíveis</h3>
+                    </div>
+
+                    <!-- Container atualizado dinamicamente pelo HTMX -->
+                    <div id="horarios-disponiveis" class="position-relative">
+                        <div class="empty-state">
+                            <i class="bi bi-calendar2-week display-5"></i>
+                            <p class="mb-0 mt-3">
+                                Selecione o serviço, o barbeiro e a data
+                                para visualizar os horários.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Indicador de carregamento do HTMX -->
+                    <div class="htmx-indicator text-center mt-4" id="carregando-horarios">
+                        <div class="spinner-border text-dark" role="status">
+                            <span class="visually-hidden">Carregando horários...</span>
+                        </div>
+                        <p class="text-secondary mt-2 mb-0">
+                            Consultando horários disponíveis...
+                        </p>
+                    </div>
+
+                    <!--
+                        Campo oculto que recebe o horário escolhido pelo
+                        cliente. Ele é preenchido via JavaScript quando o
+                        usuário clica em um dos radio buttons gerados pelo
+                        partial "_horarios_disponiveis.html".
+                    -->
+                   {% comment %}  <input
+                        type="hidden"
+                        name="hora_inicio"
+                        id="hora_inicio_oculto"
+                    > {% endcomment %}
+
+                    <div class="text-end mt-5">
+                        <button type="submit" class="btn btn-dark btn-lg px-4">
+                            <i class="bi bi-check2-circle"></i>
+                            Confirmar agendamento
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

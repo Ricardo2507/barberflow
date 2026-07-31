@@ -1,0 +1,49 @@
+# Ambiente virtual
+venv/
+env/
+ENV/
+
+# Bytecode e cache do Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Configurações do Django
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+
+# Arquivos de mídia e estáticos coletados
+media/
+staticfiles/
+
+# Variáveis de ambiente
+.env
+.env.*
+
+# Migrações (opcional — normalmente NÃO se ignora,
+# mantenha comentado a menos que seu time decida diferente)
+# */migrations/*.py
+# !*/migrations/__init__.py
+
+# VSCode
+.vscode/
+
+# Arquivos de sistema do Windows
+Thumbs.db
+desktop.ini
+
+# Distribuição / empacotamento
+build/
+dist/
+*.egg-info/
+
+# Cobertura de testes
+htmlcov/
+.coverage
+.coverage.*
+coverage.xml
+
+# Cache do pytest
+.pytest_cache/

@@ -1,0 +1,63 @@
+:root {
+    --barber-dark: #212529;
+    --barber-gold: #c49a5a;
+}
+
+body {
+    min-height: 100vh;
+}
+
+.navbar-brand {
+    letter-spacing: 0.03rem;
+}
+
+.icon-box {
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.75rem;
+    font-size: 1.35rem;
+}
+
+.empty-state {
+    min-height: 180px;
+    padding: 2rem;
+    border: 1px dashed #adb5bd;
+    border-radius: 1rem;
+    color: #6c757d;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.barbeiro-foto {
+    height: 280px;
+    object-fit: cover;
+}
+
+.card {
+    overflow: hidden;
+}
+
+.btn-check:checked + .btn-outline-dark {
+    color: #fff;
+    background-color: var(--barber-dark);
+    border-color: var(--barber-dark);
+}
+
+.htmx-indicator {
+    display: none;
+}
+
+.htmx-request.htmx-indicator {
+    display: block;
+}
+
+.htmx-request#horarios-disponiveis {
+    opacity: 0.5;
+    transition: opacity 0.2s ease-in-out;
+}

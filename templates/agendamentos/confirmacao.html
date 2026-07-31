@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block title %}Agendamento confirmado | BarberFlow{% endblock %}
+
+{% block content %}
+<section class="py-5">
+    <div class="container" style="max-width: 560px;">
+        <div class="card border-0 shadow-sm rounded-4 text-center">
+            <div class="card-body p-4 p-lg-5">
+                <i class="bi bi-check-circle-fill display-4 text-success"></i>
+
+                <h1 class="h4 mt-3">Agendamento confirmado!</h1>
+
+                <p class="text-secondary">
+                    Você receberá uma confirmação por e-mail.
+                </p>
+
+                <ul class="list-group list-group-flush text-start mt-4">
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span><i class="bi bi-stars"></i> Serviço</span>
+                        <strong>{{ agendamento.servico.nome }}</strong>
+                    </li>
+
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span><i class="bi bi-person-badge"></i> Barbeiro</span>
+                        <strong>{{ agendamento.barbeiro }}</strong>
+                    </li>
+
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span><i class="bi bi-calendar3"></i> Data</span>
+                        <strong>{{ agendamento.data|date:"d/m/Y" }}</strong>
+                    </li>
+
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span><i class="bi bi-clock"></i> Horário</span>
+                        <strong>
+                            {{ agendamento.hora_inicio|time:"H:i" }}
+                            –
+                            {{ agendamento.hora_fim|time:"H:i" }}
+                        </strong>
+                    </li>
+                </ul>
+
+                <a
+                    href="{% url 'agendamentos:agendar' %}"
+                    class="btn btn-dark btn-lg w-100 mt-4"
+                >
+                    <i class="bi bi-calendar-plus"></i>
+                    Fazer novo agendamento
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

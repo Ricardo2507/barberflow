@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block title %}Excluir serviço | BarberFlow{% endblock %}
+
+{% block content %}
+<section class="py-5">
+    <div class="container" style="max-width: 520px;">
+        <div class="card border-0 shadow-sm rounded-4">
+            <div class="card-body p-4 p-lg-5 text-center">
+                <i class="bi bi-exclamation-triangle display-5 text-danger"></i>
+
+                <h1 class="h4 mt-3">Excluir serviço</h1>
+
+                <p class="text-secondary">
+                    Tem certeza que deseja excluir
+                    <strong>{{ object.nome }}</strong>?
+                    Essa ação não pode ser desfeita.
+                </p>
+
+                <form method="post" class="d-flex justify-content-center gap-2 mt-4">
+                    {% csrf_token %}
+
+                    <a
+                        href="{% url 'servicos:lista' %}"
+                        class="btn btn-outline-secondary"
+                    >
+                        Cancelar
+                    </a>
+
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-trash"></i>
+                        Excluir
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

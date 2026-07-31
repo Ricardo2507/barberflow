@@ -1,0 +1,44 @@
+{% if horarios %}
+    <div class="row row-cols-2 row-cols-md-4 row-cols-lg-6 g-3">
+        {% for horario in horarios %}
+            <div class="col">
+                <input
+                    type="radio"
+                    class="btn-check"
+                    name="hora_inicio"
+                    id="horario-{{ forloop.counter }}"
+                    value="{{ horario|time:'H:i' }}"
+                    autocomplete="off"
+                    required
+                >
+
+                <label
+                    class="btn btn-outline-dark w-100 py-3"
+                    for="horario-{{ forloop.counter }}"
+                >
+                    <i class="bi bi-clock"></i>
+                    <span class="d-block fw-semibold">
+                        {{ horario|time:'H:i' }}
+                    </span>
+                </label>
+            </div>
+        {% endfor %}
+    </div>
+
+    <div class="alert alert-success mt-4 mb-0">
+        <i class="bi bi-check-circle"></i>
+        Selecione um dos horários acima para continuar.
+    </div>
+{% else %}
+    <div class="empty-state border border-warning">
+        <i class="bi bi-calendar-x display-5 text-warning"></i>
+
+        <h4 class="h6 mt-3">
+            Nenhum horário disponível
+        </h4>
+
+        <p class="text-secondary mb-0">
+            Tente escolher outra data ou outro barbeiro.
+        </p>
+    </div>
+{% endif %}

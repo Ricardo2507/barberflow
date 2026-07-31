@@ -1,0 +1,437 @@
+﻿{% extends "base.html" %}
+{% load static %}
+
+{% block title %}BarberFlow | Seu estilo, seu horário {%endblock %}
+
+{% block content %}
+<link
+    rel="stylesheet"
+    href="{% static 'css/home.css' %}"
+>
+
+<!-- Hero principal -->
+<section class="bf-hero">
+    <div class="bf-hero-overlay"></div>
+
+    <div class="container position-relative">
+        <div class="row align-items-center min-vh-75">
+            <div class="col-lg-7">
+                <span class="bf-eyebrow">
+                    <i class="bi bi-scissors me-2"></i>
+                    BarberFlow
+                </span>
+
+                <h1 class="bf-hero-title">
+                    Seu estilo começa
+                    com um bom horário
+                </h1>
+
+                <p class="bf-hero-text">
+                    Escolha o serviço,encontre o melhor profissional
+                    e agende seu atendimento de forma simples, rápida
+                    e segura.
+                </p>
+
+                <div class="d-flex flex-wrap gap-3 mt-4">
+                    <a
+                        href="{% url 'agendamentos:agendar' %}"
+                        class="btn bf-btn-primary btn-lg"
+                    >
+                        <i class="bi bi-calendar-check me-2"></i>
+                        Agendar agora
+                    </a>
+
+                    <a
+                        href="#servicos"
+                        class="btn bf-btn-outline btn-lg"
+                    >
+                        Conhecer serviços
+                        <i class="bi bi-arrow-down ms-2"></i>
+                    </a>
+                </div>
+
+                <div class="bf-hero-benefits">
+                    <div class="bf-benefit">
+                        <i class="bi bi-check-circle-fill"></i>
+                        <span>Agendamento rápido</span>
+                    </div>
+
+                    <div class="bf-benefit">
+                        <i class="bi bi-check-circle-fill"></i>
+                        <span>Horários atualizados</span>
+                    </div>
+
+                    <div class="bf-benefit">
+                        <i class="bi bi-check-circle-fill"></i>
+                        <span>Atendimento personalizado</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- IntroduÃ§Ã£o dos serviÃ§os -->
+<section
+    id="servicos"
+    class="bf-section bf-section-light"
+>
+    <div class="container">
+        <div class="bf-section-heading text-center">
+            <span class="bf-label">Nossos serviços</span>
+
+            <h2>
+                Cuidado, precisão e estilo
+            </h2>
+
+            <p>
+                Encontre o serviço ideal para renovar seu visual
+                e elevar sua autoestima.
+            </p>
+        </div>
+
+        <div class="row g-4">
+            <!-- Corte -->
+            <div class="col-md-6 col-lg-4">
+                <article class="bf-service-card">
+                    <div class="bf-service-image-wrapper">
+                        <img
+                            src="{% static 'images/corte.jpg' %}"
+                            alt="Corte de cabelo masculino"
+                            class="bf-service-image"
+                        >
+                    </div>
+
+                    <div class="bf-service-content">
+                        <span class="bf-service-number">01</span>
+
+                        <h3>Corte masculino</h3>
+
+                        <p>
+                            Cortes clássicos e modernos, realizados
+                            de acordo com o seu estilo e formato de rosto.
+                        </p>
+
+                        <a
+                            href="{% url 'agendamentos:agendar' %}""
+                            class="bf-service-link"
+                        >
+                            Agendar serviço
+                            <i class="bi bi-arrow-right"></i>
+                        </a>
+                    </div>
+                </article>
+            </div>
+
+            <!-- Barba -->
+            <div class="col-md-6 col-lg-4">
+                <article class="bf-service-card">
+                    <div class="bf-service-image-wrapper">
+                        <img
+                            src="{% static 'images/barba.jpg' %}"
+                            alt="Serviço profissional de barba"
+                            class="bf-service-image"
+                        >
+                    </div>
+
+                    <div class="bf-service-content">
+                        <span class="bf-service-number">02</span>
+
+                        <h3>Barba e acabamento</h3>
+
+                        <p>
+                            Modelagem, alinhamento e acabamento cuidadoso
+                            para deixar sua barba impecÃ¡vel.
+                        </p>
+
+                        <a
+                            href="{% url 'agendamentos:agendar' %}"
+                            class="bf-service-link"
+                        >
+                            Agendar serviço
+                            <i class="bi bi-arrow-right"></i>
+                        </a>
+                    </div>
+                </article>
+            </div>
+
+            <!-- MÃ¡quina -->
+            <div class="col-md-6 col-lg-4">
+                <article class="bf-service-card">
+                    <div class="bf-service-image-wrapper">
+                        <img
+                            src="{% static 'images/maquina.jpg' %}"
+                            alt="Corte realizado com máquina"
+                            class="bf-service-image"
+                        >
+                    </div>
+
+                    <div class="bf-service-content">
+                        <span class="bf-service-number">03</span>
+
+                        <h3>Corte na máquina</h3>
+
+                        <p>
+                            Praticidade, precisão e acabamento uniforme
+                            para quem prefere um visual marcante.
+                        </p>
+
+                        <a
+                            href="{% url 'agendamentos:agendar' %}"
+                            class="bf-service-link"
+                        >
+                            Agendar serviço
+                            <i class="bi bi-arrow-right"></i>
+                        </a>
+                    </div>
+                </article>
+            </div>
+
+            <!-- Sobrancelha -->
+            <div class="col-md-6 col-lg-4">
+                <article class="bf-service-card">
+                    <div class="bf-service-image-wrapper">
+                        <img
+                            src="{% static 'images/sobrancelha.jpg' %}"
+                            alt="Design e acabamento de sobrancelha"
+                            class="bf-service-image"
+                        >
+                    </div>
+
+                    <div class="bf-service-content">
+                        <span class="bf-service-number">04</span>
+
+                        <h3>Sobrancelha</h3>
+
+                        <p>
+                            Design e acabamento para valorizar os traços
+                            do rosto e complementar seu visual.
+                        </p>
+
+                        <a
+                            href="{% url 'agendamentos:agendar' %}"
+                            class="bf-service-link"
+                        >
+                            Agendar serviço
+                            <i class="bi bi-arrow-right"></i>
+                        </a>
+                    </div>
+                </article>
+            </div>
+
+            <!-- Escova progressiva -->
+            <div class="col-md-6 col-lg-4">
+                <article class="bf-service-card">
+                    <div class="bf-service-image-wrapper">
+                        <img
+                            src="{% static 'images/escova-progressiva.jpg' %}"
+                            alt="Serviçoo de escova progressiva"
+                            class="bf-service-image"
+                        >
+                    </div>
+
+                    <div class="bf-service-content">
+                        <span class="bf-service-number">05</span>
+
+                        <h3>Escova progressiva</h3>
+
+                        <p>
+                            Tratamento para alinhar, controlar o volume
+                            e facilitar os cuidados com os cabelos.
+                        </p>
+
+                        <a
+                            href="{% url 'agendamentos:agendar' %}"
+                            class="bf-service-link"
+                        >
+                            Agendar serviço
+                            <i class="bi bi-arrow-right"></i>
+                        </a>
+                    </div>
+                </article>
+            </div>
+
+            <!-- Dia do noivo -->
+            <div class="col-md-6 col-lg-4">
+                <article class="bf-service-card">
+                    <div class="bf-service-image-wrapper">
+                        <img
+                            src="{% static 'images/dia-do-noivo.jpg' %}"
+                            alt="Preparação especial para o dia do noivo"
+                            class="bf-service-image"
+                        >
+                    </div>
+
+                    <div class="bf-service-content">
+                        <span class="bf-service-number">06</span>
+
+                        <h3>Dia do noivo</h3>
+
+                        <p>
+                            Uma experiência completa de preparação para
+                            um dos momentos mais importantes da sua vida.
+                        </p>
+
+                        <a
+                            href="{% url 'agendamentos:agendar' %}"
+                            class="bf-service-link"
+                        >
+                            Agendar serviço
+                            <i class="bi bi-arrow-right"></i>
+                        </a>
+                    </div>
+                </article>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Sobre a barbearia -->
+<section class="bf-about">
+    <div class="container">
+        <div class="row align-items-center g-5">
+            <div class="col-lg-6">
+                <div class="bf-about-image-wrapper">
+                    <img
+                        src="{% static 'images/quem somos.jpg' %}"
+                        alt="Ambiente da barbearia"
+                        class="bf-about-image"
+                    >
+
+                    <div class="bf-about-badge">
+                        <strong>Experiência</strong>
+                        <span>que faz a diferença</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-6">
+                <span class="bf-label">Quem somos</span>
+
+                <h2 class="bf-about-title">
+                    Mais do que um corte.
+                    Uma experiência.
+                </h2>
+
+                <p class="bf-about-text">
+                    No BarberFlow, cada atendimento é pensado para que
+                    você tenha praticidade, conforto e um resultado
+                    que combine com a sua personalidade.
+                </p>
+
+                <p class="bf-about-text">
+                    Nossa plataforma facilita o agendamento e aproxima
+                    você dos melhores profissionais, sem filas,
+                    ligaçoes ou perda de tempo.
+                </p>
+
+                <div class="row g-3 mt-4">
+                    <div class="col-6">
+                        <div class="bf-stat">
+                            <i class="bi bi-calendar2-check"></i>
+                            <strong>Horários</strong>
+                            <span>organizados</span>
+                        </div>
+                    </div>
+
+                    <div class="col-6">
+                        <div class="bf-stat">
+                            <i class="bi bi-person-check"></i>
+                            <strong>Atendimento</strong>
+                            <span>personalizado</span>
+                        </div>
+                    </div>
+                </div>
+
+                <a
+                    href="{% url 'agendamentos:agendar' %}"
+                    class="btn bf-btn-dark mt-4"
+                >
+                    Quero agendar
+                    <i class="bi bi-arrow-right ms-2"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ExperiÃªncia da barbearia -->
+<section class="bf-experience">
+    <div class="container">
+        <div class="row align-items-center g-5">
+            <div class="col-lg-5">
+                <span class="bf-label bf-label-light">
+                    Nossa experiência
+                </span>
+
+                <h2>
+                    Estilo, cuidado e confiança em cada detalhe.
+                </h2>
+
+                <p>
+                    Da escolha do profissional ao resultado final,
+                    tudo foi pensado para tornar sua experiência
+                    mais agradável.
+                </p>
+
+                <a
+                    href="{% url 'agendamentos:agendar' %}"
+                    class="btn bf-btn-primary mt-3"
+                >
+                    Escolher horário
+                    <i class="bi bi-arrow-right ms-2"></i>
+                </a>
+            </div>
+
+            <div class="col-lg-7">
+                <div class="bf-experience-grid">
+                    <div class="bf-experience-item bf-experience-large">
+                        <img
+                            src="{% static 'images/home.jpg' %}"
+                            alt="Cliente em ambiente de barbearia"
+                        >
+                    </div>
+
+                    <div class="bf-experience-item">
+                        <img
+                            src="{% static 'images/barba.jpg' %}"
+                            alt="Profissional realizando serviço de barba"
+                        >
+                    </div>
+
+                    <div class="bf-experience-item">
+                        <img
+                            src="{% static 'images/maquina.jpg' %}"
+                            alt="Profissional realizando corte"
+                        >
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Chamada final -->
+<section class="bf-cta">
+    <div class="container">
+        <div class="bf-cta-box">
+            <div>
+                <span class="bf-label">Pronto para renovar o visual?</span>
+
+                <h2>
+                    Seu próximo horário está a poucos cliques.
+                </h2>
+            </div>
+
+            <a
+                href="{% url 'agendamentos:agendar' %}"
+                class="btn bf-btn-primary btn-lg"
+            >
+                Agendar agora
+                <i class="bi bi-calendar-check ms-2"></i>
+            </a>
+        </div>
+    </div>
+</section>
+{% endblock %}
+

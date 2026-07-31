@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block title %}Alterar agendamento{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-lg-8">
+      <div class="card border-0 shadow-sm">
+        <div class="card-body p-4">
+          <h1 class="h3 mb-1">Alterar agendamento</h1>
+
+          <p class="text-muted mb-4">
+            Escolha uma nova data ou horário para o seu agendamento.
+          </p>
+
+          {% if form.non_field_errors %}
+            <div class="alert alert-danger">
+              {{ form.non_field_errors }}
+            </div>
+          {% endif %}
+
+          <form method="post">
+            {% csrf_token %}
+
+            {% for field in form %}
+              <div class="mb-3">
+                <label
+                  for="{{ field.id_for_label }}"
+                  class="form-label"
+                >
+                  {{ field.label }}
+                </label>
+
+                {{ field }}
+
+                {% if field.errors %}
+                  <div class="text-danger small mt-1">
+                    {{ field.errors }}
+                  </div>
+                {% endif %}
+              </div>
+            {% endfor %}
+
+            <div class="d-flex gap-2 mt-4">
+              <a
+                href="{% url 'agendamentos:meus_agendamentos' %}"
+                class="btn btn-outline-secondary rounded-pill px-4"
+              >
+                Voltar
+              </a>
+
+              <button
+                type="submit"
+                class="btn btn-primary rounded-pill px-4"
+              >
+                <i class="bi bi-calendar-check"></i>
+                Salvar alteração
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

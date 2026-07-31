@@ -1,0 +1,233 @@
+{% extends "base.html" %}
+
+{% block title %}Criar conta | BarberFlow{% endblock %}
+
+{% block content %}
+<section class="py-5 bg-light min-vh-100 d-flex align-items-center">
+    <div class="container" style="max-width: 960px;">
+        <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
+            <div class="row g-0">
+
+                <!-- Painel de identidade visual -->
+                <div
+                    class="col-lg-5 d-none d-lg-flex flex-column justify-content-between text-white p-5"
+                    style="background: linear-gradient(160deg, #1a1a1a 0%, #2c2c2c 100%);"
+                >
+                    <div>
+                        <i class="bi bi-scissors display-5"></i>
+
+                        <h2 class="h3 mt-4 mb-3">
+                            BarberFlow
+                        </h2>
+
+                        <p class="text-white-50">
+                            Agende seus horários com os melhores
+                            profissionais em poucos cliques.
+                        </p>
+                    </div>
+
+                    <ul class="list-unstyled mt-5 mb-0">
+                        <li class="d-flex align-items-start mb-3">
+                            <i class="bi bi-check-circle-fill text-warning me-2 mt-1"></i>
+                            <span>Agendamento rápido e sem complicação</span>
+                        </li>
+
+                        <li class="d-flex align-items-start mb-3">
+                            <i class="bi bi-check-circle-fill text-warning me-2 mt-1"></i>
+                            <span>Acompanhe seus horários marcados</span>
+                        </li>
+
+                        <li class="d-flex align-items-start">
+                            <i class="bi bi-check-circle-fill text-warning me-2 mt-1"></i>
+                            <span>Escolha o profissional de sua preferência</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Formulário de cadastro -->
+                <div class="col-lg-7">
+                    <div class="p-4 p-md-5">
+                        <div class="mb-4">
+                            <div class="d-lg-none text-center mb-3">
+                                <i class="bi bi-scissors display-6"></i>
+                            </div>
+
+                            <h1 class="h4 mb-1">Criar minha conta</h1>
+
+                            <p class="text-secondary mb-0">
+                                Preencha os dados abaixo para começar
+                                a agendar seus horários.
+                            </p>
+                        </div>
+
+                        {% if form.errors %}
+                            <div class="alert alert-danger d-flex align-items-center rounded-3">
+                                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                                <span>Corrija os campos destacados abaixo.</span>
+                            </div>
+                        {% endif %}
+
+                        <form method="post" novalidate>
+                            {% csrf_token %}
+
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-semibold text-secondary">
+                                        Nome
+                                    </label>
+
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-white border-end-0">
+                                            <i class="bi bi-person text-secondary"></i>
+                                        </span>
+                                        {{ form.first_name }}
+                                    </div>
+
+                                    {% if form.first_name.errors %}
+                                        <div class="text-danger small mt-1">
+                                            {{ form.first_name.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-semibold text-secondary">
+                                        Sobrenome
+                                    </label>
+
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-white border-end-0">
+                                            <i class="bi bi-person text-secondary"></i>
+                                        </span>
+                                        {{ form.last_name }}
+                                    </div>
+
+                                    {% if form.last_name.errors %}
+                                        <div class="text-danger small mt-1">
+                                            {{ form.last_name.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+
+                                <div class="col-12">
+                                    <label class="form-label small fw-semibold text-secondary">
+                                        Usuário
+                                    </label>
+
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-white border-end-0">
+                                            <i class="bi bi-at text-secondary"></i>
+                                        </span>
+                                        {{ form.username }}
+                                    </div>
+
+                                    {% if form.username.errors %}
+                                        <div class="text-danger small mt-1">
+                                            {{ form.username.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+
+                                <div class="col-12">
+                                    <label class="form-label small fw-semibold text-secondary">
+                                        E-mail
+                                    </label>
+
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-white border-end-0">
+                                            <i class="bi bi-envelope text-secondary"></i>
+                                        </span>
+                                        {{ form.email }}
+                                    </div>
+
+                                    {% if form.email.errors %}
+                                        <div class="text-danger small mt-1">
+                                            {{ form.email.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+
+                                <div class="col-12">
+                                    <label class="form-label small fw-semibold text-secondary">
+                                        Telefone
+                                    </label>
+
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-white border-end-0">
+                                            <i class="bi bi-telephone text-secondary"></i>
+                                        </span>
+                                        {{ form.telefone }}
+                                    </div>
+
+                                    {% if form.telefone.errors %}
+                                        <div class="text-danger small mt-1">
+                                            {{ form.telefone.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+
+                                <div class="col-12">
+                                    <label class="form-label small fw-semibold text-secondary">
+                                        Senha
+                                    </label>
+
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-white border-end-0">
+                                            <i class="bi bi-lock text-secondary"></i>
+                                        </span>
+                                        {{ form.password1 }}
+                                    </div>
+
+                                    {% if form.password1.errors %}
+                                        <div class="text-danger small mt-1">
+                                            {{ form.password1.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+
+                                <div class="col-12">
+                                    <label class="form-label small fw-semibold text-secondary">
+                                        Confirme a senha
+                                    </label>
+
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-white border-end-0">
+                                            <i class="bi bi-lock-fill text-secondary"></i>
+                                        </span>
+                                        {{ form.password2 }}
+                                    </div>
+
+                                    {% if form.password2.errors %}
+                                        <div class="text-danger small mt-1">
+                                            {{ form.password2.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <button
+                                type="submit"
+                                class="btn btn-dark btn-lg w-100 mt-4 rounded-3"
+                            >
+                                <i class="bi bi-check2-circle me-1"></i>
+                                Criar conta
+                            </button>
+                        </form>
+
+                        <p class="text-center text-secondary mt-4 mb-0">
+                            Já tem conta?
+                            <a
+                                href="{% url 'usuarios:login' %}"
+                                class="fw-semibold text-decoration-none"
+                            >
+                                Entrar
+                            </a>
+                        </p>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

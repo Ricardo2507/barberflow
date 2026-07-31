@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+
+{% block title %}Serviços | BarberFlow{% endblock %}
+
+{% block content %}
+<section class="py-5">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="h3 mb-1">
+                    <i class="bi bi-stars"></i>
+                    Serviços
+                </h1>
+                <p class="text-secondary mb-0">
+                    Gerencie os serviços oferecidos pela barbearia.
+                </p>
+            </div>
+
+            <a href="{% url 'servicos:criar' %}" class="btn btn-dark">
+                <i class="bi bi-plus-circle"></i>
+                Novo serviço
+            </a>
+        </div>
+
+        <div class="card border-0 shadow-sm">
+            <div class="table-responsive">
+                <table class="table align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Nome</th>
+                            <th>Duração</th>
+                            <th>Preço</th>
+                            <th>Status</th>
+                            <th class="text-end">Ações</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for servico in servicos %}
+                            <tr>
+                                <td>{{ servico.nome }}</td>
+                                <td>{{ servico.duracao_minutos }} min</td>
+                                <td>R$ {{ servico.preco }}</td>
+                                <td>
+                                    {% if servico.ativo %}
+                                        <span class="badge text-bg-success">
+                                            Ativo
+                                        </span>
+                                    {% else %}
+                                        <span class="badge text-bg-secondary">
+                                            Inativo
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-end">
+                                    <a
+                                        href="{% url 'servicos:editar' servico.pk %}"
+                                        class="btn btn-sm btn-outline-dark"
+                                    >
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+
+                                    <a
+                                        href="{% url 'servicos:excluir' servico.pk %}"
+                                        class="btn btn-sm btn-outline-danger"
+                                    >
+                                        <i class="bi bi-trash"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center py-4">
+                                    <div class="empty-state border-0">
+                                        <i class="bi bi-inbox display-6"></i>
+                                        <p class="mt-2 mb-0">
+                                            Nenhum serviço cadastrado.
+                                        </p>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
