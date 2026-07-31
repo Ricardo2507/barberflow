@@ -1,0 +1,10 @@
+﻿Olá, {{ agendamento.barbeiro.usuario.get_full_name|default:agendamento.barbeiro.usuario.username }}!
+
+O atendimento abaixo foi confirmado:
+
+Cliente: {{ agendamento.cliente.get_full_name|default:agendamento.cliente.username }}
+Serviço: {{ agendamento.servico }}
+Data: {{ agendamento.data|date:"d/m/Y" }}
+Horário: {{ agendamento.hora_inicio|time:"H:i" }} às {{ agendamento.hora_fim|time:"H:i" }}
+
+BarberFlow

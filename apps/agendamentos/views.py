@@ -424,7 +424,7 @@ def painel_agendamentos(request):
 @staff_member_required
 @require_POST
 def confirmar_agendamento(request, pk):
-    """Confirma um agendamento sem validar novamente data e horario."""
+    """Confirma um agendamento, validando data/horario e notificando o cliente."""
 
     agendamento = get_object_or_404(
         Agendamento.objects.select_related(
@@ -435,27 +435,31 @@ def confirmar_agendamento(request, pk):
         pk=pk,
     )
 
+    data_hora_agendamento = timezone.make_aware(
+        datetime.combine(agendamento.data, agendamento.hora_inicio)
+    )
+
+    if data_hora_agendamento < timezone.now():
+        messages.error(
+            request,
+            "Não é possível confirmar um atendimento cuja data e horário já passaram.",
+        )
+        return redirect("agendamentos:painel")
+
     status_confirmado = getattr(
         Agendamento.Status,
         "CONFIRMADO",
         "CONFIRMADO",
     )
 
-    Agendamento.objects.filter(
-        pk=agendamento.pk,
-    ).update(
-        status=status_confirmado,
-    )
+    agendamento.status = status_confirmado
+    agendamento.save(update_fields=["status"])
 
     emails.notificar_confirmacao_para_cliente(agendamento)
+    emails.notificar_confirmacao_para_barbeiro(agendamento)
 
-    messages.success(
-        request,
-        "Agendamento confirmado com sucesso.",
-    )
-
+    messages.success(request, "Agendamento confirmado com sucesso.")
     return redirect("agendamentos:painel")
-
 
 @staff_member_required
 @require_POST

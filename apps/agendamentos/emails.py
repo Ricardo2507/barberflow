@@ -66,6 +66,14 @@ def notificar_cancelamento_para_barbeiro(agendamento):
         template="agendamentos/emails/cancelamento_barbeiro.txt",
         contexto={"agendamento": agendamento},
     )
+    
+def notificar_confirmacao_para_barbeiro(agendamento):
+    _enviar(
+        destinatario=agendamento.barbeiro.usuario.email,
+        assunto="BarberFlow - Atendimento confirmado",
+        template="agendamentos/emails/confirmacao_barbeiro.txt",
+        contexto={"agendamento": agendamento},
+    )
 
 
 def notificar_alteracao_para_barbeiro(agendamento):
