@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
-from django.db import models
+from django.db import models, transaction
 from django.utils import timezone
 
 from apps.profissionais.models import Barbeiro, HorarioTrabalho
@@ -53,6 +53,21 @@ class Agendamento(models.Model):
         verbose_name_plural = "Agendamentos"
         ordering = ["data", "hora_inicio"]
         unique_together = ("barbeiro", "data", "hora_inicio")
+
+    def _validar_conflito(self, queryset) -> None:
+        """Verifica sobreposicao de horarios dentro de uma queryset ja filtrada."""
+
+        for agendamento in queryset:
+            if not agendamento.hora_fim:
+                continue
+
+            if (
+                self.hora_inicio < agendamento.hora_fim
+                and self.hora_fim > agendamento.hora_inicio
+            ):
+                raise ValidationError(
+                    "Este barbeiro já possui um agendamento nesse horário."
+                )
 
     def clean(self) -> None:
         """Calcula hora_fim e valida data, expediente e sobreposição."""
@@ -151,30 +166,55 @@ class Agendamento(models.Model):
                 }
             )
 
-        # Valida sobreposição de horários para o mesmo barbeiro
+        # Valida sobreposição de horários para o mesmo barbeiro.
+        # Esta é a checagem "otimista", usada fora de uma transacao
+        # com lock (ex: quando o proprio form chama full_clean antes
+        # de qualquer save). Ela nao elimina a condicao de corrida
+        # sozinha, mas ja barra a grande maioria dos casos.
         conflitos = Agendamento.objects.filter(
             barbeiro=self.barbeiro,
             data=self.data,
             status__in=[self.Status.PENDENTE, self.Status.CONFIRMADO],
         ).exclude(pk=self.pk)
 
-        for agendamento in conflitos:
-            if not agendamento.hora_fim:
-                continue
-
-            if (
-                self.hora_inicio < agendamento.hora_fim
-                and self.hora_fim > agendamento.hora_inicio
-            ):
-                raise ValidationError(
-                    "Este barbeiro já possui um agendamento nesse horário."
-                )
+        self._validar_conflito(conflitos)
 
     def save(self, *args, **kwargs) -> None:
-        """Executa a validação completa (incluindo clean) antes de salvar."""
+        """Executa a validação completa dentro de uma transação protegida.
 
-        self.full_clean()
-        super().save(*args, **kwargs)
+        O uso de select_for_update() bloqueia, no banco de dados, as
+        linhas de agendamentos concorrentes do mesmo barbeiro e data
+        enquanto esta transacao nao termina. Isso fecha a brecha em
+        que duas requisicoes quase simultaneas passariam pela mesma
+        validacao de conflito antes de qualquer uma delas gravar.
+
+        Observacao: select_for_update() so tem efeito real em bancos
+        que suportam lock de linha (PostgreSQL, MySQL/InnoDB). No
+        SQLite ele e ignorado silenciosamente pelo Django.
+        """
+
+        with transaction.atomic():
+            if self.barbeiro_id and self.data:
+                # Bloqueia as linhas conflitantes candidatas ANTES de
+                # rodar o full_clean, para que a validacao de
+                # sobreposicao enxergue um estado consistente mesmo
+                # sob concorrencia.
+                (
+                    Agendamento.objects
+                    .select_for_update()
+                    .filter(
+                        barbeiro_id=self.barbeiro_id,
+                        data=self.data,
+                        status__in=[
+                            self.Status.PENDENTE,
+                            self.Status.CONFIRMADO,
+                        ],
+                    )
+                    .exclude(pk=self.pk)
+                )
+
+            self.full_clean()
+            super().save(*args, **kwargs)
 
     def __str__(self) -> str:
         return (
