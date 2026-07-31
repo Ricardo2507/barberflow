@@ -1,0 +1,12 @@
+Ola, {{ agendamento.cliente.get_full_name|default:agendamento.cliente.username }}!
+
+Seu agendamento no BarberFlow foi cancelado.
+
+Servico: {{ agendamento.servico }}
+Barbeiro: {{ agendamento.barbeiro }}
+Data: {{ agendamento.data|date:"d/m/Y" }}
+Horario: {{ agendamento.hora_inicio|time:"H:i" }}
+
+Se desejar, voce pode fazer um novo agendamento a qualquer momento.
+
+BarberFlow

@@ -1,0 +1,11 @@
+Ola, {{ agendamento.barbeiro }}!
+
+Um novo agendamento foi criado para voce no BarberFlow.
+
+Cliente: {{ agendamento.cliente.get_full_name|default:agendamento.cliente.username }}
+Servico: {{ agendamento.servico }}
+Data: {{ agendamento.data|date:"d/m/Y" }}
+Horario: {{ agendamento.hora_inicio|time:"H:i" }} as {{ agendamento.hora_fim|time:"H:i" }}
+Status: Pendente
+
+BarberFlow

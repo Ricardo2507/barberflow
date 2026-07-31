@@ -2,6 +2,9 @@
 
 from django import forms
 
+from apps.profissionais.models import Barbeiro
+from apps.servicos.models import Servico
+
 from .models import Agendamento
 
 
@@ -32,6 +35,13 @@ class AgendamentoForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.fields["data"].input_formats = ["%Y-%m-%d"]
         self.fields["hora_inicio"].input_formats = ["%H:%M"]
+
+        self.fields["servico"].queryset = Servico.objects.filter(
+            ativo=True
+        )
+        self.fields["barbeiro"].queryset = Barbeiro.objects.filter(
+            ativo=True
+        )
 
         self.fields["servico"].widget.attrs.update(
             {"class": "form-select"}

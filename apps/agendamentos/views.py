@@ -5,7 +5,7 @@ from datetime import datetime
 from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth.decorators import login_required
-from django.core.exceptions import ValidationError
+from django.core.exceptions import ValidationError, PermissionDenied
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
@@ -14,6 +14,7 @@ from django.views.decorators.http import require_POST
 from apps.profissionais.models import Barbeiro
 from apps.servicos.models import Servico
 
+from . import emails
 from .forms import AgendamentoAdminForm, AgendamentoForm
 from .models import Agendamento
 from .services import calcular_horarios_livres
@@ -40,7 +41,7 @@ def agendar(request):
 
 
 def horarios_disponiveis(request):
-    """Retorna os horários disponíveis para o formulário HTMX."""
+    """Retorna os horarios disponiveis para o formulario HTMX."""
 
     servico_id = request.GET.get("servico")
     barbeiro_id = request.GET.get("barbeiro")
@@ -49,7 +50,7 @@ def horarios_disponiveis(request):
     if not servico_id or not barbeiro_id or not data_texto:
         return HttpResponse(
             '<div class="alert alert-info">'
-            "Selecione o serviço, o barbeiro e a data."
+            "Selecione o servico, o barbeiro e a data."
             "</div>"
         )
 
@@ -73,7 +74,7 @@ def horarios_disponiveis(request):
     except ValueError:
         return HttpResponse(
             '<div class="alert alert-danger">'
-            "Data inválida."
+            "Data invalida."
             "</div>"
         )
 
@@ -92,7 +93,7 @@ def horarios_disponiveis(request):
 
 @login_required
 def criar_agendamento(request):
-    """Processa o envio do formulário e cria um agendamento."""
+    """Processa o envio do formulario e cria um agendamento."""
 
     if request.method != "POST":
         return redirect("agendamentos:agendar")
@@ -121,6 +122,9 @@ def criar_agendamento(request):
 
         return redirect("agendamentos:agendar")
 
+    emails.notificar_criacao_para_cliente(agendamento)
+    emails.notificar_criacao_para_barbeiro(agendamento)
+
     messages.success(
         request,
         "Agendamento realizado com sucesso!",
@@ -132,17 +136,33 @@ def criar_agendamento(request):
     )
 
 
+@login_required
 def confirmacao(request, pk):
-    """Exibe os detalhes do agendamento recém-criado."""
+    """Exibe os detalhes do agendamento recem-criado."""
 
     agendamento = get_object_or_404(
         Agendamento.objects.select_related(
             "cliente",
             "servico",
-            "barbeiro",
+            "barbeiro__usuario",
         ),
         pk=pk,
     )
+
+    usuario = request.user
+
+    e_dono = agendamento.cliente_id == usuario.id
+    e_equipe = usuario.is_staff
+
+    e_barbeiro_responsavel = (
+        hasattr(usuario, "perfil_barbeiro")
+        and agendamento.barbeiro_id == usuario.perfil_barbeiro.id
+    )
+
+    if not (e_dono or e_equipe or e_barbeiro_responsavel):
+        raise PermissionDenied(
+            "Voce nao tem permissao para ver este agendamento."
+        )
 
     return render(
         request,
@@ -175,8 +195,37 @@ def meus_agendamentos(request):
     )
 
 
+@login_required
+def meus_atendimentos(request):
+    """Exibe somente os atendimentos do barbeiro logado."""
+
+    if not hasattr(request.user, "perfil_barbeiro"):
+        raise PermissionDenied(
+            "Apenas barbeiros podem acessar esta pagina."
+        )
+
+    agendamentos = (
+        Agendamento.objects
+        .filter(barbeiro=request.user.perfil_barbeiro)
+        .select_related(
+            "cliente",
+            "servico",
+        )
+        .order_by("-data", "-hora_inicio")
+    )
+
+    return render(
+        request,
+        "agendamentos/meus_atendimentos.html",
+        {
+            "agendamentos": agendamentos,
+            "hoje": timezone.localdate(),
+        },
+    )
+
+
 def _inicio_do_agendamento(agendamento):
-    """Monta uma data/hora com fuso para o início do agendamento."""
+    """Monta uma data/hora com fuso para o inicio do agendamento."""
 
     inicio = datetime.combine(
         agendamento.data,
@@ -195,10 +244,14 @@ def _inicio_do_agendamento(agendamento):
 @login_required
 @require_POST
 def cancelar_meu_agendamento(request, pk):
-    """Permite que o cliente cancele o próprio agendamento."""
+    """Permite que o cliente cancele o proprio agendamento."""
 
     agendamento = get_object_or_404(
-        Agendamento,
+        Agendamento.objects.select_related(
+            "cliente",
+            "servico",
+            "barbeiro__usuario",
+        ),
         pk=pk,
         cliente=request.user,
     )
@@ -221,7 +274,7 @@ def cancelar_meu_agendamento(request, pk):
     }:
         messages.error(
             request,
-            "Este agendamento não pode mais ser cancelado.",
+            "Este agendamento nao pode mais ser cancelado.",
         )
         return redirect("agendamentos:meus_agendamentos")
 
@@ -231,17 +284,19 @@ def cancelar_meu_agendamento(request, pk):
     if inicio <= agora:
         messages.error(
             request,
-            "Não é possível cancelar um agendamento que já começou.",
+            "Nao e possivel cancelar um agendamento que ja comecou.",
         )
         return redirect("agendamentos:meus_agendamentos")
 
-    # update() evita executar novamente o full_clean() do model.
     Agendamento.objects.filter(
         pk=agendamento.pk,
         cliente=request.user,
     ).update(
         status=status_cancelado,
     )
+
+    emails.notificar_cancelamento_para_cliente(agendamento)
+    emails.notificar_cancelamento_para_barbeiro(agendamento)
 
     messages.success(
         request,
@@ -253,7 +308,7 @@ def cancelar_meu_agendamento(request, pk):
 
 @login_required
 def alterar_meu_agendamento(request, pk):
-    """Permite que o cliente altere o próprio agendamento."""
+    """Permite que o cliente altere o proprio agendamento."""
 
     agendamento = get_object_or_404(
         Agendamento,
@@ -279,7 +334,7 @@ def alterar_meu_agendamento(request, pk):
     }:
         messages.error(
             request,
-            "Este agendamento não pode mais ser alterado.",
+            "Este agendamento nao pode mais ser alterado.",
         )
         return redirect("agendamentos:meus_agendamentos")
 
@@ -289,7 +344,7 @@ def alterar_meu_agendamento(request, pk):
     if inicio <= agora:
         messages.error(
             request,
-            "Não é possível alterar um agendamento que já começou.",
+            "Nao e possivel alterar um agendamento que ja comecou.",
         )
         return redirect("agendamentos:meus_agendamentos")
 
@@ -303,8 +358,6 @@ def alterar_meu_agendamento(request, pk):
             novo_agendamento = form.save(commit=False)
             novo_agendamento.cliente = request.user
 
-            # Qualquer alteração precisa ser confirmada novamente
-            # pela equipe.
             novo_agendamento.status = getattr(
                 Agendamento.Status,
                 "PENDENTE",
@@ -324,9 +377,13 @@ def alterar_meu_agendamento(request, pk):
                 else:
                     form.add_error(None, str(erro))
             else:
+                emails.notificar_alteracao_para_barbeiro(
+                    novo_agendamento
+                )
+
                 messages.success(
                     request,
-                    "Agendamento alterado. Aguarde a confirmação da equipe.",
+                    "Agendamento alterado. Aguarde a confirmacao da equipe.",
                 )
                 return redirect("agendamentos:meus_agendamentos")
     else:
@@ -344,7 +401,7 @@ def alterar_meu_agendamento(request, pk):
 
 @staff_member_required
 def painel_agendamentos(request):
-    """Exibe todos os agendamentos para usuários da equipe."""
+    """Exibe todos os agendamentos para usuarios da equipe."""
 
     agendamentos = (
         Agendamento.objects
@@ -367,10 +424,14 @@ def painel_agendamentos(request):
 @staff_member_required
 @require_POST
 def confirmar_agendamento(request, pk):
-    """Confirma um agendamento sem validar novamente data e horário."""
+    """Confirma um agendamento sem validar novamente data e horario."""
 
     agendamento = get_object_or_404(
-        Agendamento,
+        Agendamento.objects.select_related(
+            "cliente",
+            "servico",
+            "barbeiro__usuario",
+        ),
         pk=pk,
     )
 
@@ -380,12 +441,13 @@ def confirmar_agendamento(request, pk):
         "CONFIRMADO",
     )
 
-    # update() não chama save() nem full_clean().
     Agendamento.objects.filter(
         pk=agendamento.pk,
     ).update(
         status=status_confirmado,
     )
+
+    emails.notificar_confirmacao_para_cliente(agendamento)
 
     messages.success(
         request,
@@ -398,10 +460,14 @@ def confirmar_agendamento(request, pk):
 @staff_member_required
 @require_POST
 def cancelar_agendamento(request, pk):
-    """Cancela um agendamento sem validar novamente data e horário."""
+    """Cancela um agendamento sem validar novamente data e horario."""
 
     agendamento = get_object_or_404(
-        Agendamento,
+        Agendamento.objects.select_related(
+            "cliente",
+            "servico",
+            "barbeiro__usuario",
+        ),
         pk=pk,
     )
 
@@ -411,12 +477,14 @@ def cancelar_agendamento(request, pk):
         "CANCELADO",
     )
 
-    # update() não chama save() nem full_clean().
     Agendamento.objects.filter(
         pk=agendamento.pk,
     ).update(
         status=status_cancelado,
     )
+
+    emails.notificar_cancelamento_para_cliente(agendamento)
+    emails.notificar_cancelamento_para_barbeiro(agendamento)
 
     messages.warning(
         request,

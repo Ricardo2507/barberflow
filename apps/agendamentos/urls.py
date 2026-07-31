@@ -1,4 +1,4 @@
-﻿"""Rotas do mÃ³dulo de agendamentos."""
+"""Rotas do modulo de agendamentos."""
 
 from django.urls import path
 
@@ -7,7 +7,7 @@ from . import views
 app_name = "agendamentos"
 
 urlpatterns = [
-    # Fluxo pÃºblico / do cliente
+    # Fluxo publico / do cliente
     path("", views.agendar, name="agendar"),
     path(
         "horarios-disponiveis/",
@@ -21,7 +21,7 @@ urlpatterns = [
         name="confirmacao",
     ),
 
-    # Ãrea "meus agendamentos" (cliente logado)
+    # Area "meus agendamentos" (cliente logado)
     path(
         "meus-agendamentos/",
         views.meus_agendamentos,
@@ -36,6 +36,13 @@ urlpatterns = [
         "meus-agendamentos/<int:pk>/cancelar/",
         views.cancelar_meu_agendamento,
         name="cancelar_meu_agendamento",
+    ),
+
+    # Area "meus atendimentos" (barbeiro logado)
+    path(
+        "meus-atendimentos/",
+        views.meus_atendimentos,
+        name="meus_atendimentos",
     ),
 
     # Painel administrativo (equipe)

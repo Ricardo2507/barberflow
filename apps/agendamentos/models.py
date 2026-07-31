@@ -7,7 +7,7 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils import timezone
 
-from apps.profissionais.models import Barbeiro
+from apps.profissionais.models import Barbeiro, HorarioTrabalho
 from apps.servicos.models import Servico
 
 
@@ -55,10 +55,41 @@ class Agendamento(models.Model):
         unique_together = ("barbeiro", "data", "hora_inicio")
 
     def clean(self) -> None:
-        """Calcula hora_fim e valida data, horário e sobreposição."""
+        """Calcula hora_fim e valida data, expediente e sobreposição."""
 
-        if not self.data or not self.hora_inicio or not self.servico_id:
+        if (
+            not self.data
+            or not self.hora_inicio
+            or not self.servico_id
+            or not self.barbeiro_id
+        ):
             return
+
+        if not self.barbeiro.ativo:
+            raise ValidationError(
+                {
+                    "barbeiro": (
+                        "Este barbeiro não está disponível para "
+                        "agendamentos."
+                    )
+                }
+            )
+
+        if not self.servico.ativo:
+            raise ValidationError(
+                {"servico": "Este serviço não está disponível no momento."}
+            )
+
+        if not self.barbeiro.especialidades.filter(
+            pk=self.servico_id
+        ).exists():
+            raise ValidationError(
+                {
+                    "servico": (
+                        "Este barbeiro não realiza o serviço selecionado."
+                    )
+                }
+            )
 
         # Calcula hora_fim aqui, pois neste ponto do ciclo
         # (form.is_valid() chama full_clean antes do save) o
@@ -85,6 +116,37 @@ class Agendamento(models.Model):
                     "hora_inicio": (
                         "Não é possível agendar para um horário "
                         "que já passou."
+                    )
+                }
+            )
+
+        # Valida se o barbeiro trabalha no dia da semana selecionado
+        dia_semana = self.data.weekday()
+        horarios_do_dia = HorarioTrabalho.objects.filter(
+            barbeiro=self.barbeiro,
+            dia_semana=dia_semana,
+        )
+
+        if not horarios_do_dia.exists():
+            raise ValidationError(
+                {"data": "O barbeiro não atende neste dia da semana."}
+            )
+
+        # Valida se o horário cabe dentro de alguma janela de
+        # expediente cadastrada (permite turnos separados, como
+        # manhã e tarde, com intervalo entre eles).
+        dentro_do_expediente = any(
+            self.hora_inicio >= horario.hora_inicio
+            and self.hora_fim <= horario.hora_fim
+            for horario in horarios_do_dia
+        )
+
+        if not dentro_do_expediente:
+            raise ValidationError(
+                {
+                    "hora_inicio": (
+                        "O horário selecionado está fora do "
+                        "expediente do barbeiro."
                     )
                 }
             )

@@ -1,0 +1,12 @@
+Ola, {{ agendamento.cliente.get_full_name|default:agendamento.cliente.username }}!
+
+Seu agendamento no BarberFlow foi confirmado.
+
+Servico: {{ agendamento.servico }}
+Barbeiro: {{ agendamento.barbeiro }}
+Data: {{ agendamento.data|date:"d/m/Y" }}
+Horario: {{ agendamento.hora_inicio|time:"H:i" }} as {{ agendamento.hora_fim|time:"H:i" }}
+
+Ate breve!
+
+BarberFlow

@@ -12,6 +12,8 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 
 from pathlib import Path
 
+from decouple import config
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -20,10 +22,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-u^2!-tr_hp89$#-k5h4)1a^ga4b7ywb4s__9m-4s7-&cefd^20'
+SECRET_KEY = config("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = config("DEBUG", default=False, cast=bool)
 
 ALLOWED_HOSTS = []
 
@@ -45,8 +47,7 @@ INSTALLED_APPS = [
     "apps.servicos",
     "apps.profissionais",
     "apps.agendamentos",
-     "apps.core",
-   
+    "apps.core",
 ]
 
 MIDDLEWARE = [
@@ -57,7 +58,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    # ... middlewares padrão do Django
+    # ... middlewares padrao do Django
     "django_htmx.middleware.HtmxMiddleware",
 ]
 
@@ -79,6 +80,7 @@ TEMPLATES = [
         },
     },
 ]
+
 STATIC_URL = "static/"
 STATICFILES_DIRS = [BASE_DIR / "static"]
 STATIC_ROOT = BASE_DIR / "staticfiles"
@@ -136,8 +138,29 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
-# Autenticação
+# Autenticacao
 
 LOGIN_URL = "usuarios:login"
 LOGIN_REDIRECT_URL = "/"
 LOGOUT_REDIRECT_URL = "/usuarios/login/"
+
+
+# E-mail
+# Em desenvolvimento, os e-mails aparecem no terminal (console),
+# sem custo e sem enviar de verdade. Para producao, troque o
+# EMAIL_BACKEND no .env para SMTP e preencha as credenciais.
+
+EMAIL_BACKEND = config(
+    "EMAIL_BACKEND",
+    default="django.core.mail.backends.console.EmailBackend",
+)
+DEFAULT_FROM_EMAIL = config(
+    "DEFAULT_FROM_EMAIL",
+    default="BarberFlow <naoresponda@barberflow.com>",
+)
+
+EMAIL_HOST = config("EMAIL_HOST", default="")
+EMAIL_PORT = config("EMAIL_PORT", default=587, cast=int)
+EMAIL_USE_TLS = config("EMAIL_USE_TLS", default=True, cast=bool)
+EMAIL_HOST_USER = config("EMAIL_HOST_USER", default="")
+EMAIL_HOST_PASSWORD = config("EMAIL_HOST_PASSWORD", default="")

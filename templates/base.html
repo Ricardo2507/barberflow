@@ -53,6 +53,15 @@
             </li>
 
             {% if user.is_authenticated %}
+             {% if user.perfil_barbeiro %}
+              <a
+                href="{% url 'agendamentos:meus_atendimentos' %}"
+                class="nav-link"
+              >
+                <i class="bi bi-scissors"></i>
+                Meus atendimentos
+              </a>
+            {% endif %}   
             <li class="nav-item">
               <a
                 class="nav-link"
