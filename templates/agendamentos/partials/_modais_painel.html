@@ -1,0 +1,241 @@
+{# Modal de confirmação #}
+<div
+  class="modal fade"
+  id="modalConfirmar"
+  tabindex="-1"
+  aria-labelledby="modalConfirmarLabel"
+  aria-hidden="true"
+>
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalConfirmarLabel">
+          Confirmar agendamento
+        </h5>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="modal"
+          aria-label="Fechar"
+        ></button>
+      </div>
+      <div class="modal-body">
+        <p>Confirme os dados antes de prosseguir:</p>
+        <ul class="list-unstyled">
+          <li>
+            <strong>Cliente:</strong>
+            <span id="confirmarCliente"></span>
+          </li>
+          <li>
+            <strong>Serviço:</strong>
+            <span id="confirmarServico"></span>
+          </li>
+          <li>
+            <strong>Barbeiro:</strong>
+            <span id="confirmarBarbeiro"></span>
+          </li>
+          <li>
+            <strong>Data:</strong>
+            <span id="confirmarData"></span>
+          </li>
+          <li>
+            <strong>Horário:</strong>
+            <span id="confirmarHorario"></span>
+          </li>
+        </ul>
+        <div
+          id="alertaConfirmacaoDisponivel"
+          class="alert alert-info d-none"
+          role="alert"
+        >
+          O cliente e o barbeiro receberão um e-mail de
+          confirmação.
+        </div>
+        <div
+          id="alertaAgendamentoPassado"
+          class="alert alert-warning d-none"
+          role="alert"
+        >
+          Este agendamento já passou e não pode ser confirmado.
+        </div>
+      </div>
+      <div class="modal-footer">
+        <form
+          id="formConfirmar"
+          method="post"
+          action=""
+          class="d-inline"
+        >
+          {% csrf_token %}
+          <button
+            type="button"
+            class="btn btn-secondary"
+            data-bs-dismiss="modal"
+          >
+            Voltar
+          </button>
+          <button
+            type="submit"
+            class="btn btn-success"
+            id="botaoConfirmarAgendamento"
+          >
+            <i class="bi bi-check-lg me-1"></i>
+            Confirmar agendamento
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{# Fim Modal de confirmação #}
+
+{# Modal de finalização (NOVO) #}
+<div
+  class="modal fade"
+  id="modalFinalizar"
+  tabindex="-1"
+  aria-labelledby="modalFinalizarLabel"
+  aria-hidden="true"
+>
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalFinalizarLabel">
+          Finalizar agendamento
+        </h5>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="modal"
+          aria-label="Fechar"
+        ></button>
+      </div>
+      <div class="modal-body">
+        <p>Você está prestes a finalizar o agendamento para:</p>
+        <ul class="list-unstyled">
+          <li>
+            <strong>Cliente:</strong>
+            <span id="finalizarCliente"></span>
+          </li>
+          <li>
+            <strong>Serviço:</strong>
+            <span id="finalizarServico"></span>
+          </li>
+          <li>
+            <strong>Barbeiro:</strong>
+            <span id="finalizarBarbeiro"></span>
+          </li>
+          <li>
+            <strong>Data:</strong>
+            <span id="finalizarData"></span>
+          </li>
+          <li>
+            <strong>Horário:</strong>
+            <span id="finalizarHorario"></span>
+          </li>
+        </ul>
+        <p class="text-info">
+          Ao finalizar, o agendamento será marcado como concluído.
+        </p>
+      </div>
+      <div class="modal-footer">
+        <form
+          id="formFinalizar"
+          method="post"
+          action=""
+          class="d-inline"
+        >
+          {% csrf_token %}
+          <button
+            type="button"
+            class="btn btn-secondary"
+            data-bs-dismiss="modal"
+          >
+            Voltar
+          </button>
+          <button type="submit" class="btn btn-info">
+            <i class="bi bi-check-all me-1"></i>
+            Confirmar finalização
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{# Fim Modal de finalização #}
+
+{# Modal de cancelamento #}
+<div
+  class="modal fade"
+  id="modalCancelar"
+  tabindex="-1"
+  aria-labelledby="modalCancelarLabel"
+  aria-hidden="true"
+>
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalCancelarLabel">
+          Cancelar agendamento
+        </h5>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="modal"
+          aria-label="Fechar"
+        ></button>
+      </div>
+      <div class="modal-body">
+        <p>Você está prestes a cancelar o agendamento para:</p>
+        <ul class="list-unstyled">
+          <li>
+            <strong>Cliente:</strong>
+            <span id="cancelarCliente"></span>
+          </li>
+          <li>
+            <strong>Serviço:</strong>
+            <span id="cancelarServico"></span>
+          </li>
+          <li>
+            <strong>Barbeiro:</strong>
+            <span id="cancelarBarbeiro"></span>
+          </li>
+          <li>
+            <strong>Data:</strong>
+            <span id="cancelarData"></span>
+          </li>
+          <li>
+            <strong>Horário:</strong>
+            <span id="cancelarHorario"></span>
+          </li>
+        </ul>
+        <p class="text-danger">
+          Esta ação não pode ser desfeita. Tem certeza que deseja
+          continuar?
+        </p>
+      </div>
+      <div class="modal-footer">
+        <form
+          id="formCancelar"
+          method="post"
+          action=""
+          class="d-inline"
+        >
+          {% csrf_token %}
+          <button
+            type="button"
+            class="btn btn-secondary"
+            data-bs-dismiss="modal"
+          >
+            Fechar
+          </button>
+          <button type="submit" class="btn btn-danger">
+            <i class="bi bi-x-lg me-1"></i>
+            Confirmar cancelamento
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{# Fim Modal de cancelamento #}

@@ -8,25 +8,32 @@
 
     <title>{% block title %}BarberFlow{% endblock %}</title>
 
+    {# CSS do DataTables - CORRIGIDO PARA VERSÃO 1.13.8 #}
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.8/css/dataTables.bootstrap5.min.css"/>
+
+    {# Bootstrap CSS #}
     <link
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
       rel="stylesheet"
     />
 
+    {# Bootstrap Icons #}
     <link
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
     />
 
+    {# CSS Customizado #}
     <link rel="stylesheet" href="{% static 'css/custom.css' %}" />
 
+    {# HTMX (se estiver usando) #}
     <script src="https://unpkg.com/htmx.org@2.0.4" defer></script>
   </head>
 
   <body class="bg-light">
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm">
       <div class="container">
-        <a class="navbar-brand fw-bold" href="{% url 'home' %}">
+        <a class="navbar-brand fw-bold" href="{% url 'core:home' %}">
           <i class="bi bi-scissors"></i>
           BarberFlow
         </a>
@@ -45,78 +52,89 @@
 
         <div id="menuPrincipal" class="collapse navbar-collapse">
           <ul class="navbar-nav ms-auto">
-            <li class="nav-item">
-              <a class="nav-link" href="{% url 'agendamentos:agendar' %}">
-                <i class="bi bi-calendar-check"></i>
-                Agendar
-              </a>
-            </li>
-
+            {# Link para Agendar (visível para todos autenticados) #}
             {% if user.is_authenticated %}
-             {% if user.perfil_barbeiro %}
-              <a
-                href="{% url 'agendamentos:meus_atendimentos' %}"
-                class="nav-link"
-              >
-                <i class="bi bi-scissors"></i>
-                Meus atendimentos
-              </a>
-            {% endif %}   
-            <li class="nav-item">
-              <a
-                class="nav-link"
-                href="{% url 'agendamentos:meus_agendamentos' %}"
-              >
-                <i class="bi bi-calendar-check"></i>
-                Meus agendamentos
-              </a>
-            </li>
+              <li class="nav-item">
+                <a class="nav-link" href="{% url 'agendamentos:agendar' %}">
+                  <i class="bi bi-calendar-check"></i>
+                  Agendar
+                </a>
+              </li>
 
-            {% if user.is_staff %}
-            <li class="nav-item">
-              <a
-                class="nav-link"
-                href="{% url 'agendamentos:painel' %}"
-              >
-                <i class="bi bi-clipboard-data"></i>
-                Painel de agendamentos
-              </a>
-            </li>
-            {% endif %}
+              {# Link para Meus Atendimentos (visível apenas para barbeiros) #}
+              {% if e_barbeiro %}
+                <li class="nav-item">
+                  <a
+                    href="{% url 'agendamentos:meus_atendimentos' %}"
+                    class="nav-link"
+                  >
+                    <i class="bi bi-scissors"></i>
+                    Meus atendimentos
+                  </a>
+                </li>
+              {% endif %}
 
-            <li class="nav-item">
-              <a class="nav-link" href="#">
-                <i class="bi bi-person-circle"></i>
-                {{ user.get_short_name|default:user.username }}
-              </a>
-            </li>
-
-            <li class="nav-item">
-              <form
-                method="post"
-                action="{% url 'usuarios:logout' %}"
-                class="d-inline"
-              >
-                {% csrf_token %}
-
-                <button
-                  type="submit"
-                  class="nav-link btn btn-link text-warning border-0"
+              {# Link para Meus Agendamentos (visível para todos autenticados) #}
+              <li class="nav-item">
+                <a
+                  class="nav-link"
+                  href="{% url 'agendamentos:meus_agendamentos' %}"
                 >
-                  Sair
-                </button>
-              </form>
-            </li>
+                  <i class="bi bi-calendar-check"></i>
+                  Meus agendamentos
+                </a>
+              </li>
+
+              {# Link para Painel de Agendamentos (visível apenas para administradores) #}
+              {% if is_administrador %}
+                <li class="nav-item">
+                  <a
+                    class="nav-link"
+                    href="{% url 'agendamentos:painel' %}"
+                  >
+                    <i class="bi bi-clipboard-data"></i>
+                    Painel de agendamentos
+                  </a>
+                </li>
+              {% endif %}
+
+              {# Nome do usuário logado #}
+              <li class="nav-item">
+                <a class="nav-link" href="#"> {# Pode ser um link para perfil do usuário #}
+                  <i class="bi bi-person-circle"></i>
+                  {{ user.get_short_name|default:user.username }}
+                </a>
+              </li>
+
+              {# Botão Sair #}
+              <li class="nav-item">
+                <form
+                  method="post"
+                  action="{% url 'usuarios:logout' %}"
+                  class="d-inline"
+                >
+                  {% csrf_token %}
+
+                  <button
+                    type="submit"
+                    class="nav-link btn btn-link text-warning border-0"
+                  >
+                    Sair
+                  </button>
+                </form>
+              </li>
             {% else %}
-            <li class="nav-item">
-              <a class="nav-link" href="{% url 'usuarios:login' %}"> Entrar </a>
-            </li>
+              {# Link para Entrar (visível para usuários não autenticados) #}
+              <li class="nav-item">
+                <a class="nav-link" href="{% url 'usuarios:login' %}"> Entrar </a>
+              </li>
             {% endif %}
           </ul>
         </div>
       </div>
     </nav>
 
+    {# Mensagens do Django #}
     {% if messages %}
     <div class="container mt-3">
       {% for message in messages %}
@@ -149,6 +167,22 @@
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
     <script src="{% static 'js/custom.js' %}"></script>
+
+    {# jQuery deve ser carregado antes do DataTables #}
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+    <script
+      src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"
+    ></script>
+
+    <script
+      src="https://cdn.datatables.net/1.13.8/js/dataTables.bootstrap5.min.js"
+    ></script>
+    {# Bloco para scripts específicos de cada página, como a inicialização do DataTables #}
+    {% block extra_js %}
+
+    {% endblock %}
   </body>
 </html>

@@ -1,18 +1,17 @@
-"""Modelos do app de agendamentos."""
+# apps/agendamentos/models.py
 
 from datetime import datetime, timedelta
-
 from django.conf import settings
-from django.core.exceptions import ValidationError
 from django.db import models, transaction
+from django.core.exceptions import ValidationError
 from django.utils import timezone
 
-from apps.profissionais.models import Barbeiro, HorarioTrabalho
+from apps.profissionais.models import Barbeiro
 from apps.servicos.models import Servico
 
 
 class Agendamento(models.Model):
-    """Representa a reserva de um horário para um serviço com um barbeiro."""
+    """Representa um agendamento de serviço de barbearia."""
 
     class Status(models.TextChoices):
         PENDENTE = "PENDENTE", "Pendente"
@@ -72,14 +71,29 @@ class Agendamento(models.Model):
     def clean(self) -> None:
         """Calcula hora_fim e valida data, expediente e sobreposição."""
 
+        # Se o agendamento já existe e estamos apenas mudando o status para CANCELADO ou CONCLUIDO,
+        # podemos pular algumas validações de agendamento, pois o horário já passou.
+        # No entanto, validações de integridade (barbeiro/serviço ativo, especialidade)
+        # ainda podem ser relevantes se o status não for CANCELADO.
+        if self.pk and self.status in {self.Status.CANCELADO, self.Status.CONCLUIDO}:
+            # Se o status é CANCELADO ou CONCLUIDO, não precisamos validar horário,
+            # conflito, etc., pois o agendamento já foi processado ou está sendo encerrado.
+            # Podemos validar apenas se o barbeiro/serviço ainda existem e são válidos,
+            # mas para simplificar, vamos pular as validações de tempo/conflito.
+            # Validações de FKs (barbeiro, servico) são feitas pelo Django automaticamente.
+            return
+
         if (
             not self.data
             or not self.hora_inicio
             or not self.servico_id
             or not self.barbeiro_id
         ):
+            # Validações básicas para garantir que temos dados para continuar
+            # Se faltam dados essenciais, não podemos fazer as validações complexas.
             return
 
+        # Validações de integridade de dados (barbeiro/serviço ativo, especialidade)
         if not self.barbeiro.ativo:
             raise ValidationError(
                 {
@@ -137,6 +151,8 @@ class Agendamento(models.Model):
 
         # Valida se o barbeiro trabalha no dia da semana selecionado
         dia_semana = self.data.weekday()
+        # Importar HorarioTrabalho aqui para evitar circular import se necessário
+        from apps.profissionais.models import HorarioTrabalho
         horarios_do_dia = HorarioTrabalho.objects.filter(
             barbeiro=self.barbeiro,
             dia_semana=dia_semana,
@@ -192,9 +208,17 @@ class Agendamento(models.Model):
         que suportam lock de linha (PostgreSQL, MySQL/InnoDB). No
         SQLite ele e ignorado silenciosamente pelo Django.
         """
+        # Verifica se 'update_fields' foi passado e se 'status' é o único campo a ser atualizado.
+        # Se sim, e o status é CANCELADO ou CONCLUIDO, podemos pular o full_clean().
+        # Isso evita que validações de horário/data sejam disparadas para agendamentos já passados.
+        skip_full_clean = (
+            "update_fields" in kwargs
+            and kwargs["update_fields"] == ["status"]
+            and self.status in {self.Status.CANCELADO, self.Status.CONCLUIDO}
+        )
 
         with transaction.atomic():
-            if self.barbeiro_id and self.data:
+            if not skip_full_clean and self.barbeiro_id and self.data:
                 # Bloqueia as linhas conflitantes candidatas ANTES de
                 # rodar o full_clean, para que a validacao de
                 # sobreposicao enxergue um estado consistente mesmo
@@ -213,7 +237,9 @@ class Agendamento(models.Model):
                     .exclude(pk=self.pk)
                 )
 
-            self.full_clean()
+            if not skip_full_clean:
+                self.full_clean() # Chama full_clean() apenas se não estivermos pulando
+
             super().save(*args, **kwargs)
 
     def __str__(self) -> str:

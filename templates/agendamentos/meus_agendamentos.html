@@ -4,6 +4,7 @@
 
 {% block content %}
 <div class="container py-5">
+
   <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
       <h1 class="mb-1">Meus agendamentos</h1>
@@ -16,140 +17,195 @@
       href="{% url 'agendamentos:agendar' %}"
       class="btn btn-primary rounded-pill px-4"
     >
-      <i class="bi bi-plus-lg"></i>
+      <i class="bi bi-plus-lg me-1"></i>
       Novo agendamento
     </a>
   </div>
 
   {% if messages %}
-  <div class="mb-4">
-    {% for message in messages %}
-    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-      {{ message }}
-      <button
-        type="button"
-        class="btn-close"
-        data-bs-dismiss="alert"
-        aria-label="Fechar"
-      ></button>
-    </div>
-    {% endfor %}
-  </div>
-  {% endif %}
+    <div class="mb-4">
+      {% for message in messages %}
+        <div
+          class="alert alert-{{ message.tags }} alert-dismissible fade show"
+          role="alert"
+        >
+          {{ message }}
 
-  {% if agendamentos %}
-  <div class="row g-4">
-    {% for agendamento in agendamentos %}
-    <div class="col-md-6 col-lg-4">
-      <div class="card h-100 border-0 shadow-sm">
-        <div class="card-body d-flex flex-column">
-
-          <div class="d-flex justify-content-between align-items-start mb-3">
-            <h5 class="card-title mb-0">
-              {{ agendamento.servico }}
-            </h5>
-
-            {% if agendamento.status == "PENDENTE" %}
-              <span class="badge rounded-pill text-bg-warning">
-                <i class="bi bi-hourglass-split"></i>
-                Pendente
-              </span>
-            {% elif agendamento.status == "CONFIRMADO" %}
-              <span class="badge rounded-pill text-bg-success">
-                <i class="bi bi-check-circle"></i>
-                Confirmado
-              </span>
-            {% elif agendamento.status == "CANCELADO" %}
-              <span class="badge rounded-pill text-bg-danger">
-                <i class="bi bi-x-circle"></i>
-                Cancelado
-              </span>
-            {% elif agendamento.status == "CONCLUIDO" %}
-              <span class="badge rounded-pill text-bg-secondary">
-                <i class="bi bi-flag"></i>
-                Concluído
-              </span>
-            {% else %}
-              <span class="badge rounded-pill text-bg-secondary">
-                {{ agendamento.status }}
-              </span>
-            {% endif %}
-          </div>
-
-          <p class="mb-2">
-            <i class="bi bi-person-badge me-1"></i>
-            <strong>Barbeiro:</strong>
-            {{ agendamento.barbeiro|default:"Não definido" }}
-          </p>
-
-          <p class="mb-2">
-            <i class="bi bi-calendar3 me-1"></i>
-            <strong>Data:</strong>
-            {{ agendamento.data|date:"d/m/Y" }}
-          </p>
-
-          <p class="mb-3">
-            <i class="bi bi-clock me-1"></i>
-            <strong>Horário:</strong>
-            {{ agendamento.hora_inicio|time:"H:i" }}
-            &ndash;
-            {{ agendamento.hora_fim|time:"H:i" }}
-          </p>
-
-          {% if agendamento.status != "CANCELADO" and agendamento.status != "CONCLUIDO" %}
-          <div class="mt-auto d-flex gap-2 flex-wrap">
-            <a
-              href="{% url 'agendamentos:alterar_meu_agendamento' agendamento.pk %}"
-              class="btn btn-sm btn-primary rounded-pill px-3"
-            >
-              <i class="bi bi-pencil-square"></i>
-              Alterar
-            </a>
-
-            <button
-              type="button"
-              class="btn btn-sm btn-outline-danger rounded-pill px-3"
-              data-bs-toggle="modal"
-              data-bs-target="#modalCancelarMeu"
-              data-url="{% url 'agendamentos:cancelar_meu_agendamento' agendamento.pk %}"
-              data-servico="{{ agendamento.servico }}"
-              data-barbeiro="{{ agendamento.barbeiro|default:'Não definido' }}"
-              data-data="{{ agendamento.data|date:'d/m/Y' }}"
-              data-horario="{{ agendamento.hora_inicio|time:'H:i' }} às {{ agendamento.hora_fim|time:'H:i' }}"
-            >
-              <i class="bi bi-x-circle"></i>
-              Cancelar
-            </button>
-          </div>
-          {% endif %}
-
+          <button
+            type="button"
+            class="btn-close"
+            data-bs-dismiss="alert"
+            aria-label="Fechar"
+          ></button>
         </div>
-      </div>
+      {% endfor %}
     </div>
-    {% endfor %}
-  </div>
-  {% else %}
-  <div class="card border-0 shadow-sm">
-    <div class="card-body text-center p-5">
-      <i class="bi bi-calendar-x display-4 text-muted"></i>
-      <h4 class="mt-3">Você ainda não tem agendamentos</h4>
-      <p class="text-muted mb-4">
-        Que tal marcar seu próximo horário agora?
-      </p>
-
-      <a
-        href="{% url 'agendamentos:agendar' %}"
-        class="btn btn-primary rounded-pill px-4"
-      >
-        <i class="bi bi-plus-lg"></i>
-        Fazer agendamento
-      </a>
-    </div>
-  </div>
   {% endif %}
+
+  <div class="card border-0 shadow-sm">
+    <div class="card-body p-0">
+
+      {% if agendamentos %}
+
+        <div class="table-responsive">
+          <table
+            id="tabelaMeusAgendamentos"
+            class="table table-striped table-hover align-middle mb-0"
+          >
+            <thead class="table-dark">
+              <tr>
+                <th>Serviço</th>
+                <th>Barbeiro</th>
+                <th>Data</th>
+                <th>Horário</th>
+                <th>Status</th>
+                <th class="text-end">Ações</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {% for item in agendamentos %}
+                <tr>
+                  <td>
+                    <strong>
+                      {{ item.agendamento.servico }}
+                    </strong>
+                  </td>
+
+                  <td>
+                    {{ item.agendamento.barbeiro|default:"Não definido" }}
+                  </td>
+
+                  <td>
+                    {{ item.agendamento.data|date:"d/m/Y" }}
+                  </td>
+
+                  <td>
+                    {{ item.agendamento.hora_inicio|time:"H:i" }}
+                    &ndash;
+                    {{ item.agendamento.hora_fim|time:"H:i" }}
+                  </td>
+
+                  <td>
+                    {% if item.agendamento.status == "PENDENTE" %}
+                      <span class="badge rounded-pill text-bg-warning">
+                        <i class="bi bi-hourglass-split me-1"></i>
+                        Pendente
+                      </span>
+
+                    {% elif item.agendamento.status == "CONFIRMADO" %}
+                      <span class="badge rounded-pill text-bg-success">
+                        <i class="bi bi-check-circle me-1"></i>
+                        Confirmado
+                      </span>
+
+                    {% elif item.agendamento.status == "CANCELADO" %}
+                      <span class="badge rounded-pill text-bg-danger">
+                        <i class="bi bi-x-circle me-1"></i>
+                        Cancelado
+                      </span>
+
+                    {% elif item.agendamento.status == "CONCLUIDO" %}
+                      <span class="badge rounded-pill text-bg-secondary">
+                        <i class="bi bi-flag me-1"></i>
+                        Concluído
+                      </span>
+
+                    {% else %}
+                      <span class="badge rounded-pill text-bg-secondary">
+                        {{ item.agendamento.status }}
+                      </span>
+                    {% endif %}
+                  </td>
+
+                  <td class="text-end">
+                    <div class="d-flex justify-content-end gap-2 flex-wrap">
+
+                      {% if item.pode_gerenciar %}
+                        <a
+                          href="{% url 'agendamentos:alterar_meu_agendamento' item.agendamento.pk %}"
+                          class="btn btn-sm btn-primary rounded-pill px-3"
+                        >
+                          <i class="bi bi-pencil-square me-1"></i>
+                          Alterar
+                        </a>
+                      {% else %}
+                        <button
+                          type="button"
+                          class="btn btn-sm btn-secondary rounded-pill px-3"
+                          disabled
+                          title="{{ item.motivo_nao_gerenciavel|default:'Este agendamento não pode mais ser alterado.' }}"
+                        >
+                          <i class="bi bi-pencil-square me-1"></i>
+                          Alterar
+                        </button>
+                      {% endif %}
+
+                      {% if item.pode_gerenciar %}
+                        <button
+                          type="button"
+                          class="btn btn-sm btn-outline-danger rounded-pill px-3"
+                          data-bs-toggle="modal"
+                          data-bs-target="#modalCancelarMeu"
+                          data-url="{% url 'agendamentos:cancelar_meu_agendamento' item.agendamento.pk %}"
+                          data-servico="{{ item.agendamento.servico }}"
+                          data-barbeiro="{{ item.agendamento.barbeiro|default:'Não definido' }}"
+                          data-data="{{ item.agendamento.data|date:'d/m/Y' }}"
+                          data-horario="{{ item.agendamento.hora_inicio|time:'H:i' }} às {{ item.agendamento.hora_fim|time:'H:i' }}"
+                        >
+                          <i class="bi bi-x-circle me-1"></i>
+                          Cancelar
+                        </button>
+                      {% else %}
+                        <button
+                          type="button"
+                          class="btn btn-sm btn-outline-secondary rounded-pill px-3"
+                          disabled
+                          title="{{ item.motivo_nao_gerenciavel|default:'Este agendamento não pode mais ser cancelado.' }}"
+                        >
+                          <i class="bi bi-x-circle me-1"></i>
+                          Cancelar
+                        </button>
+                      {% endif %}
+
+                    </div>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+      {% else %}
+
+        <div class="text-center p-5">
+          <i class="bi bi-calendar-x display-4 text-muted"></i>
+
+          <h4 class="mt-3">
+            Nenhum agendamento encontrado
+          </h4>
+
+          <p class="text-muted mb-4">
+            Você ainda não possui horários agendados.
+          </p>
+
+          <a
+            href="{% url 'agendamentos:agendar' %}"
+            class="btn btn-primary rounded-pill px-4"
+          >
+            <i class="bi bi-plus-lg me-1"></i>
+            Fazer agendamento
+          </a>
+        </div>
+
+      {% endif %}
+
+    </div>
+  </div>
 </div>
 
-<!-- Modal: Cancelar meu agendamento -->
+
+<!-- Modal de cancelamento do cliente -->
 <div
   class="modal fade"
   id="modalCancelarMeu"
@@ -159,10 +215,15 @@
 >
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
+
       <div class="modal-header">
-        <h5 class="modal-title" id="modalCancelarMeuLabel">
+        <h5
+          class="modal-title"
+          id="modalCancelarMeuLabel"
+        >
           Cancelar agendamento
         </h5>
+
         <button
           type="button"
           class="btn-close"
@@ -172,23 +233,46 @@
       </div>
 
       <div class="modal-body">
-        <p>Deseja realmente cancelar este agendamento?</p>
+        <p>
+          Deseja realmente cancelar este agendamento?
+        </p>
 
         <dl class="row mb-0">
           <dt class="col-sm-4">Serviço</dt>
-          <dd class="col-sm-8" id="cancelarMeuServico"></dd>
+          <dd
+            class="col-sm-8"
+            id="cancelarMeuServico"
+          >
+            —
+          </dd>
 
           <dt class="col-sm-4">Barbeiro</dt>
-          <dd class="col-sm-8" id="cancelarMeuBarbeiro"></dd>
+          <dd
+            class="col-sm-8"
+            id="cancelarMeuBarbeiro"
+          >
+            —
+          </dd>
 
           <dt class="col-sm-4">Data</dt>
-          <dd class="col-sm-8" id="cancelarMeuData"></dd>
+          <dd
+            class="col-sm-8"
+            id="cancelarMeuData"
+          >
+            —
+          </dd>
 
           <dt class="col-sm-4">Horário</dt>
-          <dd class="col-sm-8" id="cancelarMeuHorario"></dd>
+          <dd
+            class="col-sm-8"
+            id="cancelarMeuHorario"
+          >
+            —
+          </dd>
         </dl>
 
         <div class="alert alert-warning mt-3 mb-0">
+          <i class="bi bi-exclamation-triangle me-1"></i>
           Esta ação não poderá ser desfeita.
         </div>
       </div>
@@ -202,33 +286,193 @@
           Voltar
         </button>
 
-        <form method="post" id="formCancelarMeu" class="d-inline">
+        <form
+          method="post"
+          id="formCancelarMeu"
+          class="d-inline"
+        >
           {% csrf_token %}
-          <button type="submit" class="btn btn-danger">
+
+          <button
+            type="submit"
+            class="btn btn-danger"
+            id="btnConfirmarCancelamentoMeu"
+          >
+            <i class="bi bi-x-circle me-1"></i>
             Cancelar agendamento
           </button>
         </form>
       </div>
+
     </div>
   </div>
 </div>
+{% endblock %}
 
+{% block extra_js %}
 <script>
-  document
-    .getElementById("modalCancelarMeu")
-    .addEventListener("show.bs.modal", function (event) {
-      var botao = event.relatedTarget;
+  document.addEventListener("DOMContentLoaded", function () {
+    /*
+     * Inicialização do DataTables
+     */
+    const tabela = document.getElementById(
+      "tabelaMeusAgendamentos"
+    );
 
-      document.getElementById("cancelarMeuServico").textContent =
-        botao.dataset.servico;
-      document.getElementById("cancelarMeuBarbeiro").textContent =
-        botao.dataset.barbeiro;
-      document.getElementById("cancelarMeuData").textContent =
-        botao.dataset.data;
-      document.getElementById("cancelarMeuHorario").textContent =
-        botao.dataset.horario;
+    if (tabela && $.fn.DataTable) {
+      $("#tabelaMeusAgendamentos").DataTable({
+        paging: true,
+        pageLength: 10,
+        lengthChange: true,
+        searching: true,
+        ordering: true,
+        info: true,
+        responsive: true, // Adicionado para responsividade
 
-      document.getElementById("formCancelarMeu").action = botao.dataset.url;
-    });
+        language: {
+          url: "//cdn.datatables.net/plug-ins/1.11.5/i18n/pt-BR.json",
+          // Ou, se preferir definir manualmente como no painel:
+          // search: "Pesquisar:",
+          // lengthMenu: "Mostrar _MENU_ registros",
+          // info: "Mostrando _START_ até _END_ de _TOTAL_ registros",
+          // infoEmpty: "Nenhum registro para exibir",
+          // zeroRecords: "Nenhum registro encontrado",
+          // paginate: {
+          //   first: "Primeiro",
+          //   previous: "Anterior",
+          //   next: "Próximo",
+          //   last: "Último"
+          // }
+        },
+        columnDefs: [
+          {
+            targets: 5, // Coluna de Ações
+            orderable: false,
+            searchable: false
+          }
+        ],
+        order: [
+          [2, "desc"], // Data
+          [3, "desc"] // Horário
+        ]
+      });
+    }
+
+
+    /*
+     * Controle do modal de cancelamento
+     */
+    const modalCancelarMeu = document.getElementById(
+      "modalCancelarMeu"
+    );
+
+    if (!modalCancelarMeu) {
+      return;
+    }
+
+    modalCancelarMeu.addEventListener(
+      "show.bs.modal",
+      function (event) {
+        const botao = event.relatedTarget;
+
+        if (!botao) {
+          return;
+        }
+
+        const servico =
+          botao.getAttribute("data-servico") ||
+          "Não informado";
+
+        const barbeiro =
+          botao.getAttribute("data-barbeiro") ||
+          "Não definido";
+
+        const data =
+          botao.getAttribute("data-data") ||
+          "Não informada";
+
+        const horario =
+          botao.getAttribute("data-horario") ||
+          "Não informado";
+
+        const url =
+          botao.getAttribute("data-url");
+
+        document.getElementById(
+          "cancelarMeuServico"
+        ).textContent = servico;
+
+        document.getElementById(
+          "cancelarMeuBarbeiro"
+        ).textContent = barbeiro;
+
+        document.getElementById(
+          "cancelarMeuData"
+        ).textContent = data;
+
+        document.getElementById(
+          "cancelarMeuHorario"
+        ).textContent = horario;
+
+        const formulario = document.getElementById(
+          "formCancelarMeu"
+        );
+
+        if (formulario && url) {
+          formulario.action = url;
+        }
+
+        const botaoConfirmar = document.getElementById(
+          "btnConfirmarCancelamentoMeu"
+        );
+
+        if (botaoConfirmar) {
+          botaoConfirmar.disabled = false;
+          botaoConfirmar.removeAttribute("title");
+        }
+      }
+    );
+
+
+    /*
+     * Limpa os dados ao fechar o modal
+     */
+    modalCancelarMeu.addEventListener(
+      "hidden.bs.modal",
+      function () {
+        const campos = [
+          "cancelarMeuServico",
+          "cancelarMeuBarbeiro",
+          "cancelarMeuData",
+          "cancelarMeuHorario"
+        ];
+
+        campos.forEach(function (id) {
+          const campo = document.getElementById(id);
+
+          if (campo) {
+            campo.textContent = "—";
+          }
+        });
+
+        const formulario = document.getElementById(
+          "formCancelarMeu"
+        );
+
+        if (formulario) {
+          formulario.removeAttribute("action");
+        }
+
+        const botaoConfirmar = document.getElementById(
+          "btnConfirmarCancelamentoMeu"
+        );
+
+        if (botaoConfirmar) {
+          botaoConfirmar.disabled = false;
+          botaoConfirmar.removeAttribute("title");
+        }
+      }
+    );
+  });
 </script>
 {% endblock %}

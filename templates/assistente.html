@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Assistente BarberFlow</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 700px;
+            margin: 40px auto;
+            padding: 20px;
+        }
+
+        #chat {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 16px;
+            min-height: 250px;
+            margin-bottom: 16px;
+            background: #fafafa;
+            overflow-y: auto; /* Adicionado para permitir rolagem */
+            max-height: 400px; /* Adicionado para limitar a altura do chat */
+        }
+
+        .mensagem {
+            margin: 12px 0;
+            padding: 10px;
+            border-radius: 6px;
+        }
+
+        .cliente {
+            background: #e8f0fe;
+            text-align: right;
+            margin-left: 20%; /* Para a mensagem do cliente ficar à direita */
+        }
+
+        .assistente {
+            background: #e8f5e9;
+            margin-right: 20%; /* Para a mensagem do assistente ficar à esquerda */
+        }
+
+        form {
+            display: flex;
+            gap: 8px;
+        }
+
+        input {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid #bbb;
+            border-radius: 6px;
+        }
+
+        button {
+            padding: 12px 18px;
+            border: 0;
+            border-radius: 6px;
+            background: #222;
+            color: white;
+            cursor: pointer;
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: wait;
+        }
+    </style>
+</head>
+<body>
+    <h1>Assistente BarberFlow</h1>
+
+    <div id="chat">
+        <div class="mensagem assistente">
+            Olá! Como posso ajudar?
+        </div>
+    </div>
+
+    <form id="form-pergunta">
+        <input
+            id="pergunta"
+            type="text"
+            placeholder="Digite sua pergunta..."
+            autocomplete="off"
+            required
+        >
+
+        <button id="botao-enviar" type="submit">
+            Enviar
+        </button>
+    </form>
+
+    <script>
+        const formulario = document.getElementById("form-pergunta");
+        const campoPergunta = document.getElementById("pergunta");
+        const chat = document.getElementById("chat");
+        const botaoEnviar = document.getElementById("botao-enviar");
+
+        function adicionarMensagem(texto, classe) {
+            const mensagem = document.createElement("div");
+            mensagem.className = `mensagem ${classe}`;
+            mensagem.textContent = texto;
+            chat.appendChild(mensagem);
+            chat.scrollTop = chat.scrollHeight; // Rola para o final do chat
+        }
+
+        formulario.addEventListener("submit", async function(event) {
+            event.preventDefault(); // Impede o recarregamento da página
+
+            const pergunta = campoPergunta.value.trim();
+
+            if (!pergunta) {
+                return; // Não envia pergunta vazia
+            }
+
+            adicionarMensagem(pergunta, "cliente");
+
+            campoPergunta.value = ""; // Limpa o campo de pergunta
+            campoPergunta.disabled = true; // Desabilita o campo enquanto espera
+            botaoEnviar.disabled = true; // Desabilita o botão
+            botaoEnviar.textContent = "Consultando..."; // Muda o texto do botão
+
+            try {
+                const resposta = await fetch("/api/ai-assistant/", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        question: pergunta
+                    })
+                });
+
+                const dados = await resposta.json();
+
+                if (!resposta.ok) { // Verifica se a resposta HTTP foi bem-sucedida (status 2xx)
+                    throw new Error(
+                        dados.error || "Não foi possível obter uma resposta."
+                    );
+                }
+
+                adicionarMensagem(dados.answer, "assistente");
+
+            } catch (erro) {
+                console.error("Erro ao chamar a API:", erro);
+                adicionarMensagem(
+                    erro.message || "Ocorreu um erro. Tente novamente.",
+                    "assistente"
+                );
+            } finally {
+                campoPergunta.disabled = false; // Reabilita o campo
+                botaoEnviar.disabled = false; // Reabilita o botão
+                botaoEnviar.textContent = "Enviar"; // Restaura o texto do botão
+                campoPergunta.focus(); // Coloca o foco de volta no campo de pergunta
+            }
+        });
+    </script>
+</body>
+</html>

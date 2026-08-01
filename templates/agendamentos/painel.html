@@ -4,6 +4,7 @@
 
 {% block content %}
 <div class="container py-5">
+
   <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
       <h1 class="mb-1">Todos os agendamentos</h1>
@@ -13,391 +14,526 @@
     </div>
 
     <span class="badge text-bg-dark fs-6">
-      {{ agendamentos|length }} agendamento{{ agendamentos|length|pluralize }}
+      {{ agendamentos|length }}
+      agendamento{{ agendamentos|length|pluralize }}
     </span>
   </div>
 
   {% if messages %}
-  <div class="mb-4">
-    {% for message in messages %}
-    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-      {{ message }}
-      <button
-        type="button"
-        class="btn-close"
-        data-bs-dismiss="alert"
-        aria-label="Fechar"
-      ></button>
+    <div class="mb-4">
+      {% for message in messages %}
+        <div
+          class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show"
+          role="alert"
+        >
+          {{ message }}
+
+          <button
+            type="button"
+            class="btn-close"
+            data-bs-dismiss="alert"
+            aria-label="Fechar"
+          ></button>
+        </div>
+      {% endfor %}
     </div>
-    {% endfor %}
-  </div>
   {% endif %}
 
   <div class="card border-0 shadow-sm">
     <div class="card-body p-0">
+
       {% if agendamentos %}
-      <div class="table-responsive">
-        <table class="table table-hover align-middle mb-0">
-          <thead class="table-dark">
-            <tr>
-              <th>Cliente</th>
-              <th>Serviço</th>
-              <th>Barbeiro</th>
-              <th>Data</th>
-              <th>Horário</th>
-              <th>Status</th>
-              <th class="text-end">Ações</th>
-            </tr>
-          </thead>
 
-          <tbody>
-            {% for agendamento in agendamentos %}
-            <tr>
-              <td>
-                <strong>{{ agendamento.cliente }}</strong>
-              </td>
-
-              <td>
-                {{ agendamento.servico }}
-              </td>
-
-              <td>
-                {{ agendamento.barbeiro|default:"Não definido" }}
-              </td>
-
-              <td>
-                <i class="bi bi-calendar3 me-1"></i>
-                {{ agendamento.data|date:"d/m/Y" }}
-              </td>
-
-              <td>
-                <i class="bi bi-clock me-1"></i>
-                {{ agendamento.hora_inicio|time:"H:i" }}
-                &ndash;
-                {{ agendamento.hora_fim|time:"H:i" }}
-              </td>
-
-              <td>
-                {% if agendamento.status == "PENDENTE" %}
-                  <span class="badge rounded-pill text-bg-warning">
-                    <i class="bi bi-hourglass-split"></i>
-                    Pendente
-                  </span>
-                {% elif agendamento.status == "CONFIRMADO" %}
-                  <span class="badge rounded-pill text-bg-success">
-                    <i class="bi bi-check-circle"></i>
-                    Confirmado
-                  </span>
-                {% elif agendamento.status == "CANCELADO" %}
-                  <span class="badge rounded-pill text-bg-danger">
-                    <i class="bi bi-x-circle"></i>
-                    Cancelado
-                  </span>
-                {% elif agendamento.status == "CONCLUIDO" %}
-                  <span class="badge rounded-pill text-bg-secondary">
-                    <i class="bi bi-flag"></i>
-                    Concluído
-                  </span>
-                {% else %}
-                  <span class="badge rounded-pill text-bg-secondary">
-                    {{ agendamento.status }}
-                  </span>
-                {% endif %}
-              </td>
-
-              <td class="text-end">
-                <div class="d-flex justify-content-end gap-2 flex-wrap">
-                  <a
-                    href="{% url 'agendamentos:editar' agendamento.pk %}"
-                    class="btn btn-sm btn-primary rounded-pill px-3"
-                    title="Editar agendamento"
-                  >
-                    <i class="bi bi-pencil-square"></i>
-                    Editar
-                  </a>
-
-                  {% if agendamento.status != "CONFIRMADO" %}
-                  <button
-                    type="button"
-                    class="btn btn-sm btn-success rounded-pill px-3"
-                    data-bs-toggle="modal"
-                    data-bs-target="#modalConfirmar"
-                    data-url="{% url 'agendamentos:confirmar' agendamento.pk %}"
-                    data-cliente="{{ agendamento.cliente }}"
-                    data-servico="{{ agendamento.servico }}"
-                    data-barbeiro="{{ agendamento.barbeiro|default:'Não definido' }}"
-                    data-data="{{ agendamento.data|date:'d/m/Y' }}"
-                    data-horario="{{ agendamento.hora_inicio|time:'H:i' }} às {{ agendamento.hora_fim|time:'H:i' }}"
-                    data-data-iso="{{ agendamento.data|date:'Y-m-d' }}"
-                    data-hora-iso="{{ agendamento.hora_inicio|time:'H:i:s' }}"
-                  >
-                    <i class="bi bi-check-lg"></i>
-                    Confirmar
-                  </button>
-                  {% endif %}
-
-                  {% if agendamento.status != "CANCELADO" %}
-                  <button
-                    type="button"
-                    class="btn btn-sm btn-outline-danger rounded-pill px-3"
-                    data-bs-toggle="modal"
-                    data-bs-target="#modalCancelar"
-                    data-url="{% url 'agendamentos:cancelar' agendamento.pk %}"
-                    data-cliente="{{ agendamento.cliente }}"
-                    data-servico="{{ agendamento.servico }}"
-                    data-barbeiro="{{ agendamento.barbeiro|default:'Não definido' }}"
-                    data-data="{{ agendamento.data|date:'d/m/Y' }}"
-                    data-horario="{{ agendamento.hora_inicio|time:'H:i' }} às {{ agendamento.hora_fim|time:'H:i' }}"
-                  >
-                    <i class="bi bi-x-lg"></i>
-                    Cancelar
-                  </button>
-                  {% endif %}
-                </div>
-              </td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
-      {% else %}
-      <div class="text-center p-5">
-        <i class="bi bi-calendar-x display-4 text-muted"></i>
-        <h4 class="mt-3">Nenhum agendamento encontrado</h4>
-        <p class="text-muted mb-0">
-          Ainda não existem agendamentos cadastrados.
-        </p>
-      </div>
-      {% endif %}
-    </div>
-  </div>
-</div>
-
-<!-- Modal: Confirmar agendamento -->
-<div
-  class="modal fade"
-  id="modalConfirmar"
-  tabindex="-1"
-  aria-labelledby="modalConfirmarLabel"
-  aria-hidden="true"
->
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="modalConfirmarLabel">
-          Confirmar agendamento
-        </h5>
-        <button
-          type="button"
-          class="btn-close"
-          data-bs-dismiss="modal"
-          aria-label="Fechar"
-        ></button>
-      </div>
-
-      <div class="modal-body">
-        <p>Confirme os dados antes de prosseguir:</p>
-
-        <dl class="row mb-0">
-          <dt class="col-sm-4">Cliente</dt>
-          <dd class="col-sm-8" id="confirmarCliente"></dd>
-
-          <dt class="col-sm-4">Serviço</dt>
-          <dd class="col-sm-8" id="confirmarServico"></dd>
-
-          <dt class="col-sm-4">Barbeiro</dt>
-          <dd class="col-sm-8" id="confirmarBarbeiro"></dd>
-
-          <dt class="col-sm-4">Data</dt>
-          <dd class="col-sm-8" id="confirmarData"></dd>
-
-          <dt class="col-sm-4">Horário</dt>
-          <dd class="col-sm-8" id="confirmarHorario"></dd>
-        </dl>
-
-        <div
-          id="alertaConfirmacaoDisponivel"
-          class="alert alert-info mt-3 mb-0"
-        >
-          O cliente e o barbeiro receberão um e-mail de confirmação.
-        </div>
-
-        <div
-          id="alertaAgendamentoPassado"
-          class="alert alert-warning mt-3 mb-0 d-none"
-        >
-          <i class="bi bi-exclamation-triangle me-1"></i>
-          Não é possível confirmar um agendamento cuja data e horário já passaram.
-        </div>
-      </div>
-
-      <div class="modal-footer">
-        <button
-          type="button"
-          class="btn btn-secondary"
-          data-bs-dismiss="modal"
-        >
-          Voltar
-        </button>
-
-        <form method="post" id="formConfirmar" class="d-inline">
-          {% csrf_token %}
-          <button
-            type="submit"
-            class="btn btn-success"
-            id="botaoConfirmarAgendamento"
+        <div class="table-responsive">
+          <table
+            id="tabelaPainelAgendamentos"
+            class="table table-striped table-hover align-middle mb-0"
           >
-            Confirmar agendamento
-          </button>
-        </form>
-      </div>
-    </div>
-  </div>
-</div>
+            <thead class="table-dark">
+              <tr>
+                <th>Cliente</th>
+                <th>Serviço</th>
+                <th>Barbeiro</th>
+                <th>Data</th>
+                <th>Horário</th>
+                <th>Status</th>
+                <th class="text-end">Ações</th>
+              </tr>
+            </thead>
 
-<!-- Modal: Cancelar agendamento -->
-<div
-  class="modal fade"
-  id="modalCancelar"
-  tabindex="-1"
-  aria-labelledby="modalCancelarLabel"
-  aria-hidden="true"
->
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="modalCancelarLabel">
-          Cancelar agendamento
-        </h5>
-        <button
-          type="button"
-          class="btn-close"
-          data-bs-dismiss="modal"
-          aria-label="Fechar"
-        ></button>
-      </div>
+            <tbody>
+              {% for item in agendamentos %}
+                <tr>
+                  <td>
+                    <strong>
+                      {{ item.agendamento.cliente }}
+                    </strong>
+                  </td>
 
-      <div class="modal-body">
-        <p>Tem certeza de que deseja cancelar este agendamento?</p>
+                  <td>
+                    {{ item.agendamento.servico }}
+                  </td>
 
-        <dl class="row mb-0">
-          <dt class="col-sm-4">Cliente</dt>
-          <dd class="col-sm-8" id="cancelarCliente"></dd>
+                  <td>
+                    {{ item.agendamento.barbeiro }}
+                  </td>
 
-          <dt class="col-sm-4">Serviço</dt>
-          <dd class="col-sm-8" id="cancelarServico"></dd>
+                  <td>
+                    {{ item.agendamento.data|date:"d/m/Y" }}
+                  </td>
 
-          <dt class="col-sm-4">Barbeiro</dt>
-          <dd class="col-sm-8" id="cancelarBarbeiro"></dd>
+                  <td>
+                    {{ item.agendamento.hora_inicio|time:"H:i" }}
+                    &ndash;
+                    {{ item.agendamento.hora_fim|time:"H:i" }}
+                  </td>
 
-          <dt class="col-sm-4">Data</dt>
-          <dd class="col-sm-8" id="cancelarData"></dd>
+                  <td>
+                    {% if item.agendamento.status == "PENDENTE" %}
+                      <span class="badge rounded-pill text-bg-warning">
+                        <i class="bi bi-hourglass-split me-1"></i>
+                        Pendente
+                      </span>
 
-          <dt class="col-sm-4">Horário</dt>
-          <dd class="col-sm-8" id="cancelarHorario"></dd>
-        </dl>
+                    {% elif item.agendamento.status == "CONFIRMADO" %}
+                      <span class="badge rounded-pill text-bg-success">
+                        <i class="bi bi-check-circle me-1"></i>
+                        Confirmado
+                      </span>
 
-        <div class="alert alert-warning mt-3 mb-0">
-          Esta ação não poderá ser desfeita.
+                    {% elif item.agendamento.status == "CANCELADO" %}
+                      <span class="badge rounded-pill text-bg-danger">
+                        <i class="bi bi-x-circle me-1"></i>
+                        Cancelado
+                      </span>
+
+                    {% elif item.agendamento.status == "CONCLUIDO" %}
+                      <span class="badge rounded-pill text-bg-secondary">
+                        <i class="bi bi-flag me-1"></i>
+                        Concluído
+                      </span>
+
+                    {% else %}
+                      <span class="badge rounded-pill text-bg-secondary">
+                        {{ item.agendamento.status }}
+                      </span>
+                    {% endif %}
+                  </td>
+
+                  <td class="text-end">
+                    <div class="d-flex justify-content-end gap-2 flex-wrap">
+
+                      {# Botão de Editar #}
+                      <a
+                        href="{% url 'agendamentos:editar_agendamento' item.agendamento.pk %}"
+                        class="btn btn-sm btn-outline-primary rounded-pill px-3"
+                      >
+                        <i class="bi bi-pencil-square me-1"></i>
+                        Editar
+                      </a>
+
+                      {# Botão de Confirmar #}
+                      {% if item.agendamento.status == "PENDENTE" %}
+                        <button
+                          type="button"
+                          class="btn btn-sm btn-success rounded-pill px-3"
+                          data-bs-toggle="modal"
+                          data-bs-target="#modalConfirmar"
+                          data-cliente="{{ item.agendamento.cliente }}"
+                          data-servico="{{ item.agendamento.servico }}"
+                          data-barbeiro="{{ item.agendamento.barbeiro }}"
+                          data-data="{{ item.agendamento.data|date:'d/m/Y' }}"
+                          data-horario="{{ item.agendamento.hora_inicio|time:'H:i' }} - {{ item.agendamento.hora_fim|time:'H:i' }}"
+                          data-data-iso="{{ item.agendamento.data|date:'Y-m-d' }}"
+                          data-hora-iso="{{ item.agendamento.hora_inicio|time:'H:i' }}"
+                          data-url="{% url 'agendamentos:confirmar_agendamento' item.agendamento.pk %}"
+                        >
+                          <i class="bi bi-check-lg me-1"></i>
+                          Confirmar
+                        </button>
+                      {% endif %}
+
+                      {# Botão de Finalizar - CORRIGIDO #}
+                      {% if item.agendamento.status == "CONFIRMADO" %}
+                        <button
+                          type="button"
+                          class="btn btn-sm btn-info rounded-pill px-3"
+                          data-bs-toggle="modal"
+                          data-bs-target="#modalFinalizar"
+                          data-url="{% url 'agendamentos:finalizar_agendamento' item.agendamento.pk %}"
+                          data-cliente="{{ item.agendamento.cliente }}"
+                          data-servico="{{ item.agendamento.servico }}"
+                          data-barbeiro="{{ item.agendamento.barbeiro }}"
+                          data-data="{{ item.agendamento.data|date:'d/m/Y' }}"
+                          data-horario="{{ item.agendamento.hora_inicio|time:'H:i' }} - {{ item.agendamento.hora_fim|time:'H:i' }}"
+                        >
+                          <i class="bi bi-flag me-1"></i>
+                          Finalizar
+                        </button>
+                      {% endif %}
+
+                      {# Botão de Cancelar #}
+                      {% if item.agendamento.status != "CANCELADO" and item.agendamento.status != "CONCLUIDO" %}
+                        <button
+                          type="button"
+                          class="btn btn-sm btn-danger rounded-pill px-3"
+                          data-bs-toggle="modal"
+                          data-bs-target="#modalCancelar"
+                          data-cliente="{{ item.agendamento.cliente }}"
+                          data-servico="{{ item.agendamento.servico }}"
+                          data-barbeiro="{{ item.agendamento.barbeiro }}"
+                          data-data="{{ item.agendamento.data|date:'d/m/Y' }}"
+                          data-horario="{{ item.agendamento.hora_inicio|time:'H:i' }} - {{ item.agendamento.hora_fim|time:'H:i' }}"
+                          data-url="{% url 'agendamentos:cancelar_agendamento' item.agendamento.pk %}"
+                        >
+                          <i class="bi bi-x-lg me-1"></i>
+                          Cancelar
+                        </button>
+                      {% endif %}
+
+                    </div>
+                  </td>
+                </tr>
+              {% empty %}
+                <tr>
+                  <td colspan="7" class="text-center text-muted py-4">
+                    Nenhum agendamento encontrado.
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
         </div>
-      </div>
 
-      <div class="modal-footer">
-        <button
-          type="button"
-          class="btn btn-secondary"
-          data-bs-dismiss="modal"
-        >
-          Voltar
-        </button>
+      {% else %}
+        <div class="alert alert-info m-4" role="alert">
+          Nenhum agendamento para exibir no momento.
+        </div>
+      {% endif %}
 
-        <form method="post" id="formCancelar" class="d-inline">
-          {% csrf_token %}
-          <button type="submit" class="btn btn-danger">
-            Cancelar agendamento
-          </button>
-        </form>
-      </div>
     </div>
   </div>
+
 </div>
 
+{# Inclui os modais de confirmação, finalização e cancelamento #}
+{% include "agendamentos/partials/_modais_painel.html" %}
+
+{% endblock %}
+
+{% block extra_js %}
 <script>
-  document
-    .getElementById("modalConfirmar")
-    .addEventListener("show.bs.modal", function (event) {
-      var botao = event.relatedTarget;
+  document.addEventListener("DOMContentLoaded", function () {
+    console.log("JavaScript do painel carregado.");
 
-      document.getElementById("confirmarCliente").textContent =
-        botao.dataset.cliente;
+    /*
+     * DataTables
+     */
+    const tabela = document.getElementById(
+      "tabelaPainelAgendamentos"
+    );
 
-      document.getElementById("confirmarServico").textContent =
-        botao.dataset.servico;
+    if (
+      tabela &&
+      window.jQuery &&
+      window.jQuery.fn &&
+      window.jQuery.fn.DataTable
+    ) {
+      console.log("DataTables encontrado. Inicializando tabela.");
 
-      document.getElementById("confirmarBarbeiro").textContent =
-        botao.dataset.barbeiro;
+      if (!$.fn.DataTable.isDataTable("#tabelaPainelAgendamentos")) {
+        $("#tabelaPainelAgendamentos").DataTable({
+          paging: true,
+          pageLength: 10,
+          lengthChange: true,
+          searching: true,
+          ordering: true,
+          info: true,
+          responsive: true,
 
-      document.getElementById("confirmarData").textContent =
-        botao.dataset.data;
+          language: {
+            decimal: ",",
+            thousands: ".",
+            processing: "Processando...",
+            search: "Pesquisar:",
+            lengthMenu: "Mostrar _MENU_ registros",
+            info: "Mostrando _START_ até _END_ de _TOTAL_ agendamentos",
+            infoEmpty: "Mostrando 0 até 0 de 0 agendamentos",
+            infoFiltered:
+              "(filtrado de _MAX_ agendamentos no total)",
+            loadingRecords: "Carregando...",
+            zeroRecords: "Nenhum agendamento encontrado",
+            emptyTable: "Nenhum agendamento disponível",
 
-      document.getElementById("confirmarHorario").textContent =
-        botao.dataset.horario;
+            paginate: {
+              first: "Primeiro",
+              previous: "Anterior",
+              next: "Próximo",
+              last: "Último"
+            }
+          },
 
-      document.getElementById("formConfirmar").action =
-        botao.dataset.url;
+          columnDefs: [
+            {
+              targets: 6,
+              orderable: false,
+              searchable: false
+            }
+          ],
 
-      var dataHoraAgendamento = new Date(
-        botao.dataset.dataIso + "T" + botao.dataset.horaIso
-      );
-
-      var agora = new Date();
-
-      var botaoConfirmar = document.getElementById(
-        "botaoConfirmarAgendamento"
-      );
-
-      var alertaDisponivel = document.getElementById(
-        "alertaConfirmacaoDisponivel"
-      );
-
-      var alertaPassado = document.getElementById(
-        "alertaAgendamentoPassado"
-      );
-
-      if (dataHoraAgendamento <= agora) {
-        botaoConfirmar.disabled = true;
-        botaoConfirmar.innerHTML =
-          '<i class="bi bi-lock me-1"></i> Confirmação indisponível';
-
-        alertaDisponivel.classList.add("d-none");
-        alertaPassado.classList.remove("d-none");
-      } else {
-        botaoConfirmar.disabled = false;
-        botaoConfirmar.innerHTML =
-          '<i class="bi bi-check-lg me-1"></i> Confirmar agendamento';
-
-        alertaDisponivel.classList.remove("d-none");
-        alertaPassado.classList.add("d-none");
+          order: [
+            [3, "desc"],
+            [4, "asc"]
+          ]
+        });
       }
+    } else {
+      console.error(
+        "DataTables não foi encontrado. Verifique o base.html."
+      );
+    }
+
+    /*
+     * Configuração dos modais
+     */
+    const modais = [
+      {
+        modalId: "modalConfirmar",
+        prefixo: "confirmar",
+        formularioId: "formConfirmar"
+      },
+      {
+        modalId: "modalFinalizar",
+        prefixo: "finalizar",
+        formularioId: "formFinalizar"
+      },
+      {
+        modalId: "modalCancelar",
+        prefixo: "cancelar",
+        formularioId: "formCancelar"
+      }
+    ];
+
+    modais.forEach(function (configuracao) {
+      const modal = document.getElementById(
+        configuracao.modalId
+      );
+
+      if (!modal) {
+        console.warn(
+          "Modal não encontrado:",
+          configuracao.modalId
+        );
+        return;
+      }
+
+      modal.addEventListener(
+        "show.bs.modal",
+        function (event) {
+          const botao = event.relatedTarget;
+
+          if (!botao) {
+            console.error(
+              "Botão que abriu o modal não encontrado:",
+              configuracao.modalId
+            );
+            return;
+          }
+
+          const dados = {
+            Cliente: botao.getAttribute("data-cliente"),
+            Servico: botao.getAttribute("data-servico"),
+            Barbeiro: botao.getAttribute("data-barbeiro"),
+            Data: botao.getAttribute("data-data"),
+            Horario: botao.getAttribute("data-horario")
+          };
+
+          console.log(
+            "Modal aberto:",
+            configuracao.modalId
+          );
+          console.log("Dados:", dados);
+
+          Object.entries(dados).forEach(function (
+            [campo, valor]
+          ) {
+            const elemento = document.getElementById(
+              configuracao.prefixo + campo
+            );
+
+            if (elemento) {
+              elemento.textContent =
+                valor || "Não informado";
+            }
+          });
+
+          const formulario = document.getElementById(
+            configuracao.formularioId
+          );
+
+          if (formulario) {
+            formulario.method = "post";
+            formulario.action =
+              botao.getAttribute("data-url") || "";
+
+            console.log(
+              "Formulário configurado:",
+              formulario.action
+            );
+          }
+
+          /*
+           * Regra do modal de confirmação:
+           * não permite confirmar agendamento passado.
+           */
+          if (
+            configuracao.modalId === "modalConfirmar"
+          ) {
+            const botaoConfirmar =
+              document.getElementById(
+                "botaoConfirmarAgendamento"
+              );
+
+            const alertaDisponivel =
+              document.getElementById(
+                "alertaConfirmacaoDisponivel"
+              );
+
+            const alertaPassado =
+              document.getElementById(
+                "alertaAgendamentoPassado"
+              );
+
+            const dataIso =
+              botao.getAttribute("data-data-iso");
+
+            const horaIso =
+              botao.getAttribute("data-hora-iso");
+
+            let agendamentoPassado = false;
+
+            if (dataIso && horaIso) {
+              const dataHoraAgendamento = new Date(
+                `${dataIso}T${horaIso}:00`
+              );
+
+              agendamentoPassado =
+                !Number.isNaN(
+                  dataHoraAgendamento.getTime()
+                ) &&
+                dataHoraAgendamento <= new Date();
+            }
+
+            if (agendamentoPassado) {
+              if (botaoConfirmar) {
+                botaoConfirmar.disabled = true;
+                botaoConfirmar.innerHTML =
+                  '<i class="bi bi-lock me-1"></i> ' +
+                  "Confirmação indisponível";
+              }
+
+              if (alertaDisponivel) {
+                alertaDisponivel.classList.add(
+                  "d-none"
+                );
+              }
+
+              if (alertaPassado) {
+                alertaPassado.classList.remove(
+                  "d-none"
+                );
+              }
+            } else {
+              if (botaoConfirmar) {
+                botaoConfirmar.disabled = false;
+                botaoConfirmar.innerHTML =
+                  '<i class="bi bi-check-lg me-1"></i> ' +
+                  "Confirmar agendamento";
+              }
+
+              if (alertaDisponivel) {
+                alertaDisponivel.classList.remove(
+                  "d-none"
+                );
+              }
+
+              if (alertaPassado) {
+                alertaPassado.classList.add(
+                  "d-none"
+                );
+              }
+            }
+          }
+        }
+      );
+
+      modal.addEventListener(
+        "hidden.bs.modal",
+        function () {
+          [
+            "Cliente",
+            "Servico",
+            "Barbeiro",
+            "Data",
+            "Horario"
+          ].forEach(function (campo) {
+            const elemento = document.getElementById(
+              configuracao.prefixo + campo
+            );
+
+            if (elemento) {
+              elemento.textContent = "—";
+            }
+          });
+
+          const formulario = document.getElementById(
+            configuracao.formularioId
+          );
+
+          if (formulario) {
+            formulario.removeAttribute("action");
+          }
+
+          if (
+            configuracao.modalId === "modalConfirmar"
+          ) {
+            const botaoConfirmar =
+              document.getElementById(
+                "botaoConfirmarAgendamento"
+              );
+
+            const alertaDisponivel =
+              document.getElementById(
+                "alertaConfirmacaoDisponivel"
+              );
+
+            const alertaPassado =
+              document.getElementById(
+                "alertaAgendamentoPassado"
+              );
+
+            if (botaoConfirmar) {
+              botaoConfirmar.disabled = false;
+              botaoConfirmar.innerHTML =
+                '<i class="bi bi-check-lg me-1"></i> ' +
+                "Confirmar agendamento";
+            }
+
+            if (alertaDisponivel) {
+              alertaDisponivel.classList.remove(
+                "d-none"
+              );
+            }
+
+            if (alertaPassado) {
+              alertaPassado.classList.add(
+                "d-none"
+              );
+            }
+          }
+        }
+      );
     });
-
-  document
-    .getElementById("modalCancelar")
-    .addEventListener("show.bs.modal", function (event) {
-      var botao = event.relatedTarget;
-
-      document.getElementById("cancelarCliente").textContent =
-        botao.dataset.cliente;
-      document.getElementById("cancelarServico").textContent =
-        botao.dataset.servico;
-      document.getElementById("cancelarBarbeiro").textContent =
-        botao.dataset.barbeiro;
-      document.getElementById("cancelarData").textContent =
-        botao.dataset.data;
-      document.getElementById("cancelarHorario").textContent =
-        botao.dataset.horario;
-
-      document.getElementById("formCancelar").action = botao.dataset.url;
-    });
+  });
 </script>
 {% endblock %}

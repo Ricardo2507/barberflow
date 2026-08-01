@@ -17,6 +17,10 @@ from decouple import config
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# Configuração da API do Gemini
+# Ele vai procurar por GEMINI_API_KEY nas variáveis de ambiente
+# ou no seu arquivo .env
+GEMINI_API_KEY = config("GEMINI_API_KEY", default="")
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
@@ -47,6 +51,7 @@ INSTALLED_APPS = [
     "apps.servicos",
     "apps.profissionais",
     "apps.agendamentos",
+    'rest_framework',
     "apps.core",
 ]
 
@@ -76,6 +81,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                "apps.agendamentos.context_processors.permissoes_agendamentos",
             ],
         },
     },
@@ -95,9 +101,13 @@ WSGI_APPLICATION = 'config.wsgi.application'
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+    "default": {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": config("DB_NAME"),
+        "USER": config("DB_USER"),
+        "PASSWORD": config("DB_PASSWORD"),
+        "HOST": config("DB_HOST", default="localhost"),
+        "PORT": config("DB_PORT", default="5432"),
     }
 }
 

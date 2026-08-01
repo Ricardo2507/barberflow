@@ -1,34 +1,15 @@
-"""URLs principais do projeto."""
+# apps/core/urls.py
+from django.urls import path
+from . import views # Importa as views do próprio app core
 
-from django.contrib import admin
-from django.urls import include, path
-
-from apps.core import views as core_views
+app_name = "core"
 
 urlpatterns = [
+    path("", views.home, name="home"), # A view 'home' do app core
+    path("assistente/", views.assistente, name="assistente"), # Adicione esta linha
     path(
-        "admin/",
-        admin.site.urls,
-    ),
-    path(
-        "",
-        core_views.home,
-        name="home",
-    ),
-    path(
-        "agendamentos/",
-        include("apps.agendamentos.urls"),
-    ),
-    path(
-        "usuarios/",
-        include("apps.usuarios.urls"),
-    ),
-    path(
-        "servicos/",
-        include("apps.servicos.urls"),
-    ),
-    path(
-        "barbeiros/",
-        include("apps.profissionais.urls"),
+        "api/ai-assistant/",
+        views.ai_assistant_api, # A view 'ai_assistant_api' do app core
+        name="ai_assistant_api",
     ),
 ]

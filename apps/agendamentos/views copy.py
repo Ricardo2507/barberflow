@@ -7,21 +7,19 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
 from django.http import HttpResponse
-from django.shortcuts import get_object_or_404, redirect, render
+from django.shortcuts import get_object_or_404, redirect, render, redirect
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 
 from apps.profissionais.models import Barbeiro
 from apps.servicos.models import Servico
 
-# Removendo a importação do módulo 'emails' para substituí-lo
-# from . import emails
-
+from . import emails
 from .forms import AgendamentoAdminForm, AgendamentoForm
 from .models import Agendamento
 from .services import calcular_horarios_livres
-
-# Importe a função utilitária que acabamos de criar
+# from .models import Agendamento # Seu modelo de agendamento
+from apps.core.utils import enviar_email_async # Importe a função utilitária que acabamos de criar
 from apps.core.utils import enviar_email_async
 
 
@@ -229,42 +227,12 @@ def criar_agendamento(request):
         _adicionar_erros_de_validacao(request, erro)
         return redirect("agendamentos:agendar")
 
-    # --- Substituição das chamadas de e-mail síncronas por assíncronas ---
-    # Notificação para o cliente
-    enviar_email_async(
-        subject="Seu agendamento no BarberFlow foi confirmado!",
-        message=(
-            f"Olá, {agendamento.cliente.get_full_name() or agendamento.cliente.username}!\n\n"
-            "Seu agendamento foi confirmado com sucesso.\n\n"
-            f"Detalhes do Agendamento:\n"
-            f"Serviço: {agendamento.servico.nome}\n"
-            f"Barbeiro: {agendamento.barbeiro.usuario.get_full_name() or agendamento.barbeiro.usuario.username}\n"
-            f"Data: {agendamento.data.strftime('%d/%m/%Y')}\n"
-            f"Horário: {agendamento.hora_inicio.strftime('%H:%M')}\n\n"
-            "Aguardamos você!"
-        ),
-        recipient_list=[agendamento.cliente.email],
-    )
-
-    # Notificação para o barbeiro
-    enviar_email_async(
-        subject=f"Novo agendamento para você: {agendamento.servico.nome}",
-        message=(
-            f"Olá, {agendamento.barbeiro.usuario.get_full_name() or agendamento.barbeiro.usuario.username}!\n\n"
-            "Você tem um novo agendamento:\n\n"
-            f"Cliente: {agendamento.cliente.get_full_name() or agendamento.cliente.username}\n"
-            f"Serviço: {agendamento.servico.nome}\n"
-            f"Data: {agendamento.data.strftime('%d/%m/%Y')}\n"
-            f"Horário: {agendamento.hora_inicio.strftime('%H:%M')}\n\n"
-            "Verifique seus agendamentos no painel."
-        ),
-        recipient_list=[agendamento.barbeiro.usuario.email],
-    )
-    # --- Fim da substituição ---
+    emails.notificar_criacao_para_cliente(agendamento)
+    emails.notificar_criacao_para_barbeiro(agendamento)
 
     messages.success(
         request,
-        "Agendamento realizado com sucesso. Um e-mail de confirmação foi enviado.",
+        "Agendamento realizado com sucesso.",
     )
 
     return redirect(
@@ -464,38 +432,8 @@ def cancelar_meu_agendamento(request, pk):
         )
         return redirect("agendamentos:meus_agendamentos")
 
-    # --- Substituição das chamadas de e-mail síncronas por assíncronas ---
-    # Notificação para o cliente
-    enviar_email_async(
-        subject="Seu agendamento no BarberFlow foi cancelado.",
-        message=(
-            f"Olá, {agendamento.cliente.get_full_name() or agendamento.cliente.username}!\n\n"
-            "Seu agendamento foi cancelado com sucesso.\n\n"
-            f"Detalhes do Agendamento:\n"
-            f"Serviço: {agendamento.servico.nome}\n"
-            f"Barbeiro: {agendamento.barbeiro.usuario.get_full_name() or agendamento.barbeiro.usuario.username}\n"
-            f"Data: {agendamento.data.strftime('%d/%m/%Y')}\n"
-            f"Horário: {agendamento.hora_inicio.strftime('%H:%M')}\n\n"
-            "Esperamos vê-lo em breve!"
-        ),
-        recipient_list=[agendamento.cliente.email],
-    )
-
-    # Notificação para o barbeiro
-    enviar_email_async(
-        subject=f"Agendamento cancelado: {agendamento.servico.nome}",
-        message=(
-            f"Olá, {agendamento.barbeiro.usuario.get_full_name() or agendamento.barbeiro.usuario.username}!\n\n"
-            "Um agendamento foi cancelado:\n\n"
-            f"Cliente: {agendamento.cliente.get_full_name() or agendamento.cliente.username}\n"
-            f"Serviço: {agendamento.servico.nome}\n"
-            f"Data: {agendamento.data.strftime('%d/%m/%Y')}\n"
-            f"Horário: {agendamento.hora_inicio.strftime('%H:%M')}\n\n"
-            "Verifique seus agendamentos no painel."
-        ),
-        recipient_list=[agendamento.barbeiro.usuario.email],
-    )
-    # --- Fim da substituição ---
+    emails.notificar_cancelamento_para_cliente(agendamento)
+    emails.notificar_cancelamento_para_barbeiro(agendamento)
 
     messages.success(
         request,
@@ -562,37 +500,6 @@ def alterar_meu_agendamento(request, pk):
             except ValidationError as erro:
                 _adicionar_erros_de_validacao(request, erro)
             else:
-                # --- Notificação de alteração para o cliente e barbeiro ---
-                enviar_email_async(
-                    subject="Seu agendamento no BarberFlow foi alterado!",
-                    message=(
-                        f"Olá, {agendamento.cliente.get_full_name() or agendamento.cliente.username}!\n\n"
-                        "Seu agendamento foi alterado com sucesso.\n\n"
-                        f"Novos Detalhes do Agendamento:\n"
-                        f"Serviço: {agendamento.servico.nome}\n"
-                        f"Barbeiro: {agendamento.barbeiro.usuario.get_full_name() or agendamento.barbeiro.usuario.username}\n"
-                        f"Data: {agendamento.data.strftime('%d/%m/%Y')}\n"
-                        f"Horário: {agendamento.hora_inicio.strftime('%H:%M')}\n\n"
-                        "Aguardamos você!"
-                    ),
-                    recipient_list=[agendamento.cliente.email],
-                )
-
-                enviar_email_async(
-                    subject=f"Agendamento alterado: {agendamento.servico.nome}",
-                    message=(
-                        f"Olá, {agendamento.barbeiro.usuario.get_full_name() or agendamento.barbeiro.usuario.username}!\n\n"
-                        "Um agendamento foi alterado:\n\n"
-                        f"Cliente: {agendamento.cliente.get_full_name() or agendamento.cliente.username}\n"
-                        f"Serviço: {agendamento.servico.nome}\n"
-                        f"Nova Data: {agendamento.data.strftime('%d/%m/%Y')}\n"
-                        f"Novo Horário: {agendamento.hora_inicio.strftime('%H:%M')}\n\n"
-                        "Verifique seus agendamentos no painel."
-                    ),
-                    recipient_list=[agendamento.barbeiro.usuario.email],
-                )
-                # --- Fim da notificação ---
-
                 messages.success(
                     request,
                     "Agendamento alterado com sucesso.",
@@ -822,36 +729,8 @@ def confirmar_agendamento(request, pk):
         agendamento.status = status["confirmado"]
         agendamento.save(update_fields=["status"])
 
-    # --- Notificação de confirmação para o cliente e barbeiro ---
-    enviar_email_async(
-        subject="Seu agendamento no BarberFlow foi confirmado!",
-        message=(
-            f"Olá, {agendamento.cliente.get_full_name() or agendamento.cliente.username}!\n\n"
-            "Seu agendamento foi confirmado pela equipe.\n\n"
-            f"Detalhes do Agendamento:\n"
-            f"Serviço: {agendamento.servico.nome}\n"
-            f"Barbeiro: {agendamento.barbeiro.usuario.get_full_name() or agendamento.barbeiro.usuario.username}\n"
-            f"Data: {agendamento.data.strftime('%d/%m/%Y')}\n"
-            f"Horário: {agendamento.hora_inicio.strftime('%H:%M')}\n\n"
-            "Aguardamos você!"
-        ),
-        recipient_list=[agendamento.cliente.email],
-    )
-
-    enviar_email_async(
-        subject=f"Agendamento confirmado: {agendamento.servico.nome}",
-        message=(
-            f"Olá, {agendamento.barbeiro.usuario.get_full_name() or agendamento.barbeiro.usuario.username}!\n\n"
-            "Um agendamento foi confirmado:\n\n"
-            f"Cliente: {agendamento.cliente.get_full_name() or agendamento.cliente.username}\n"
-            f"Serviço: {agendamento.servico.nome}\n"
-            f"Data: {agendamento.data.strftime('%d/%m/%Y')}\n"
-            f"Horário: {agendamento.hora_inicio.strftime('%H:%M')}\n\n"
-            "Verifique seus agendamentos no painel."
-        ),
-        recipient_list=[agendamento.barbeiro.usuario.email],
-    )
-    # --- Fim da notificação ---
+    emails.notificar_confirmacao_para_cliente(agendamento)
+    emails.notificar_confirmacao_para_barbeiro(agendamento)
 
     messages.success(
         request,
@@ -923,23 +802,6 @@ def finalizar_agendamento(request, pk):
         agendamento.status = status["concluido"]
         agendamento.save(update_fields=["status"])
 
-    # --- Notificação de finalização para o cliente ---
-    enviar_email_async(
-        subject="Seu agendamento no BarberFlow foi concluído!",
-        message=(
-            f"Olá, {agendamento.cliente.get_full_name() or agendamento.cliente.username}!\n\n"
-            "Seu agendamento foi concluído com sucesso. Esperamos que tenha gostado!\n\n"
-            f"Detalhes do Agendamento:\n"
-            f"Serviço: {agendamento.servico.nome}\n"
-            f"Barbeiro: {agendamento.barbeiro.usuario.get_full_name() or agendamento.barbeiro.usuario.username}\n"
-            f"Data: {agendamento.data.strftime('%d/%m/%Y')}\n"
-            f"Horário: {agendamento.hora_inicio.strftime('%H:%M')}\n\n"
-            "Volte sempre!"
-        ),
-        recipient_list=[agendamento.cliente.email],
-    )
-    # --- Fim da notificação ---
-
     messages.success(
         request,
         "Agendamento finalizado com sucesso.",
@@ -997,36 +859,8 @@ def cancelar_agendamento(request, pk):
         agendamento.status = status["cancelado"]
         agendamento.save(update_fields=["status"])
 
-    # --- Notificação de cancelamento administrativo para o cliente e barbeiro ---
-    enviar_email_async(
-        subject="Seu agendamento no BarberFlow foi cancelado pela equipe.",
-        message=(
-            f"Olá, {agendamento.cliente.get_full_name() or agendamento.cliente.username}!\n\n"
-            "Informamos que seu agendamento foi cancelado pela equipe do BarberFlow.\n\n"
-            f"Detalhes do Agendamento:\n"
-            f"Serviço: {agendamento.servico.nome}\n"
-            f"Barbeiro: {agendamento.barbeiro.usuario.get_full_name() or agendamento.barbeiro.usuario.username}\n"
-            f"Data: {agendamento.data.strftime('%d/%m/%Y')}\n"
-            f"Horário: {agendamento.hora_inicio.strftime('%H:%M')}\n\n"
-            "Por favor, entre em contato se tiver alguma dúvida."
-        ),
-        recipient_list=[agendamento.cliente.email],
-    )
-
-    enviar_email_async(
-        subject=f"Agendamento cancelado administrativamente: {agendamento.servico.nome}",
-        message=(
-            f"Olá, {agendamento.barbeiro.usuario.get_full_name() or agendamento.barbeiro.usuario.username}!\n\n"
-            "Um agendamento foi cancelado administrativamente:\n\n"
-            f"Cliente: {agendamento.cliente.get_full_name() or agendamento.cliente.username}\n"
-            f"Serviço: {agendamento.servico.nome}\n"
-            f"Data: {agendamento.data.strftime('%d/%m/%Y')}\n"
-            f"Horário: {agendamento.hora_inicio.strftime('%H:%M')}\n\n"
-            "Verifique seus agendamentos no painel."
-        ),
-        recipient_list=[agendamento.barbeiro.usuario.email],
-    )
-    # --- Fim da notificação ---
+    emails.notificar_cancelamento_para_cliente(agendamento)
+    emails.notificar_cancelamento_para_barbeiro(agendamento)
 
     messages.warning(
         request,
@@ -1089,37 +923,6 @@ def editar_agendamento(request, pk):
                 else:
                     form.add_error(None, str(erro))
             else:
-                # --- Notificação de alteração administrativa para o cliente e barbeiro ---
-                enviar_email_async(
-                    subject="Seu agendamento no BarberFlow foi alterado pela equipe.",
-                    message=(
-                        f"Olá, {agendamento.cliente.get_full_name() or agendamento.cliente.username}!\n\n"
-                        "Informamos que seu agendamento foi alterado pela equipe do BarberFlow.\n\n"
-                        f"Novos Detalhes do Agendamento:\n"
-                        f"Serviço: {agendamento.servico.nome}\n"
-                        f"Barbeiro: {agendamento.barbeiro.usuario.get_full_name() or agendamento.barbeiro.usuario.username}\n"
-                        f"Data: {agendamento.data.strftime('%d/%m/%Y')}\n"
-                        f"Horário: {agendamento.hora_inicio.strftime('%H:%M')}\n\n"
-                        "Por favor, verifique os novos detalhes."
-                    ),
-                    recipient_list=[agendamento.cliente.email],
-                )
-
-                enviar_email_async(
-                    subject=f"Agendamento alterado administrativamente: {agendamento.servico.nome}",
-                    message=(
-                        f"Olá, {agendamento.barbeiro.usuario.get_full_name() or agendamento.barbeiro.usuario.username}!\n\n"
-                        "Um agendamento foi alterado administrativamente:\n\n"
-                        f"Cliente: {agendamento.cliente.get_full_name() or agendamento.cliente.username}\n"
-                        f"Serviço: {agendamento.servico.nome}\n"
-                        f"Nova Data: {agendamento.data.strftime('%d/%m/%Y')}\n"
-                        f"Novo Horário: {agendamento.hora_inicio.strftime('%H:%M')}\n\n"
-                        "Verifique seus agendamentos no painel."
-                    ),
-                    recipient_list=[agendamento.barbeiro.usuario.email],
-                )
-                # --- Fim da notificação ---
-
                 messages.success(
                     request,
                     "Agendamento alterado com sucesso.",
@@ -1137,4 +940,4 @@ def editar_agendamento(request, pk):
             "form": form,
             "agendamento": agendamento,
         },
-    )
+    ) 
