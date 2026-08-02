@@ -267,11 +267,11 @@ def criar_agendamento(request):
         "Agendamento realizado com sucesso. Um e-mail de confirmação foi enviado.",
     )
 
-    return redirect(
-        "agendamentos:confirmacao",
-        pk=agendamento.pk,
-    )
-
+    # return redirect(
+    #     "agendamentos:confirmacao",
+    #     pk=agendamento.pk,
+    # )
+    return redirect("agendamentos:meus_agendamentos") 
 
 # ============================================================================
 # Visualização de agendamento

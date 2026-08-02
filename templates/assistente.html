@@ -1,160 +1,218 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Assistente BarberFlow</title>
+{% extends "base.html" %}
+{% load static %}
 
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 700px;
-            margin: 40px auto;
-            padding: 20px;
-        }
+{% block title %}Assistente BarberFlow{% endblock %}
 
-        #chat {
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            padding: 16px;
-            min-height: 250px;
-            margin-bottom: 16px;
-            background: #fafafa;
-            overflow-y: auto; /* Adicionado para permitir rolagem */
-            max-height: 400px; /* Adicionado para limitar a altura do chat */
-        }
+{% block extra_head %}
+    <link rel="stylesheet" href="{% static 'css/assistente.css' %}">
+{% endblock %}
 
-        .mensagem {
-            margin: 12px 0;
-            padding: 10px;
-            border-radius: 6px;
-        }
+{% block content %}
+<main class="assistente-page">
+    <div class="container py-4 py-lg-5">
+        <div class="assistente-wrapper mx-auto">
 
-        .cliente {
-            background: #e8f0fe;
-            text-align: right;
-            margin-left: 20%; /* Para a mensagem do cliente ficar à direita */
-        }
+            <section class="assistente-card shadow-lg">
+                <header class="assistente-header">
+                    <div class="assistente-brand">
+                        <div class="assistente-icon" aria-hidden="true">
+                            <i class="bi bi-scissors"></i>
+                        </div>
+                        <div>
+                            <h1 class="mb-1">Assistente BarberFlow</h1>
+                            <p class="mb-0">
+                                Tire suas dúvidas sobre nossos serviços e agendamentos.
+                            </p>
+                        </div>
+                    </div>
 
-        .assistente {
-            background: #e8f5e9;
-            margin-right: 20%; /* Para a mensagem do assistente ficar à esquerda */
-        }
+                    <div class="assistente-status">
+                        <span class="status-dot"></span>
+                        Online
+                    </div>
+                </header>
 
-        form {
-            display: flex;
-            gap: 8px;
-        }
+                <div
+                    id="chat"
+                    class="chat-window"
+                    aria-live="polite"
+                    aria-label="Conversa com o assistente"
+                >
+                    <div class="mensagem assistente">
+                        <div class="mensagem-avatar" aria-hidden="true">
+                            <i class="bi bi-stars"></i>
+                        </div>
+                        <div class="mensagem-conteudo">
+                            <span class="mensagem-remetente">BarberFlow</span>
+                            <p>
+                                Olá! Sou o assistente da BarberFlow.
+                                Como posso ajudar?
+                            </p>
+                        </div>
+                    </div>
+                </div>
 
-        input {
-            flex: 1;
-            padding: 12px;
-            border: 1px solid #bbb;
-            border-radius: 6px;
-        }
+                <div class="assistente-footer">
+                    <form id="form-pergunta" class="pergunta-form">
+                        {% csrf_token %} {# Adicionado o token CSRF aqui #}
+                        <label for="pergunta" class="visually-hidden">
+                            Digite sua pergunta
+                        </label>
+                        <input
+                            id="pergunta"
+                            name="question"
+                            type="text"
+                            placeholder="Digite sua pergunta..."
+                            autocomplete="off"
+                            maxlength="500"
+                            required
+                        >
+                        <button id="botao-enviar" type="submit">
+                            <span class="texto-enviar">Enviar</span>
+                            <span
+                                class="spinner-border spinner-border-sm d-none"
+                                id="spinner"
+                                aria-hidden="true"
+                            ></span>
+                            <i class="bi bi-send-fill ms-1" aria-hidden="true"></i>
+                        </button>
+                    </form>
 
-        button {
-            padding: 12px 18px;
-            border: 0;
-            border-radius: 6px;
-            background: #222;
-            color: white;
-            cursor: pointer;
-        }
+                    <p class="assistente-aviso">
+                        O assistente responde sobre a BarberFlow, seus serviços,
+                        horários e agendamentos.
+                    </p>
+                </div>
+            </section>
 
-        button:disabled {
-            opacity: 0.6;
-            cursor: wait;
-        }
-    </style>
-</head>
-<body>
-    <h1>Assistente BarberFlow</h1>
-
-    <div id="chat">
-        <div class="mensagem assistente">
-            Olá! Como posso ajudar?
+            <div class="assistente-acoes d-flex justify-content-between mt-4">
+                <a href="{% url 'core:home' %}" class="btn btn-outline-dark">
+                    <i class="bi bi-arrow-left"></i>
+                    Voltar para o início
+                </a>
+                <a href="#form-pergunta" class="btn btn-dark">
+                    <i class="bi bi-calendar-check"></i>
+                    Fazer uma pergunta
+                </a>
+            </div>
         </div>
     </div>
+</main>
 
-    <form id="form-pergunta">
-        <input
-            id="pergunta"
-            type="text"
-            placeholder="Digite sua pergunta..."
-            autocomplete="off"
-            required
-        >
+<script>
+    // Função para obter o token CSRF do cookie
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                // Does this cookie string begin with the name we want?
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+    const csrftoken = getCookie('csrftoken'); // Obtém o token CSRF
 
-        <button id="botao-enviar" type="submit">
-            Enviar
-        </button>
-    </form>
+    const formulario = document.getElementById("form-pergunta");
+    const campoPergunta = document.getElementById("pergunta");
+    const chat = document.getElementById("chat");
+    const botaoEnviar = document.getElementById("botao-enviar");
+    const textoEnviar = document.querySelector(".texto-enviar");
+    const spinner = document.getElementById("spinner");
 
-    <script>
-        const formulario = document.getElementById("form-pergunta");
-        const campoPergunta = document.getElementById("pergunta");
-        const chat = document.getElementById("chat");
-        const botaoEnviar = document.getElementById("botao-enviar");
+    // Função adicionarMensagem atualizada para lidar com HTML
+    function adicionarMensagem(texto, classe, permitirHtml = false) {
+        const mensagem = document.createElement("div");
+        mensagem.className = `mensagem ${classe}`;
 
-        function adicionarMensagem(texto, classe) {
-            const mensagem = document.createElement("div");
-            mensagem.className = `mensagem ${classe}`;
-            mensagem.textContent = texto;
-            chat.appendChild(mensagem);
-            chat.scrollTop = chat.scrollHeight; // Rola para o final do chat
+        if (classe === "assistente") {
+            mensagem.innerHTML = `
+                <div class="mensagem-avatar" aria-hidden="true">
+                    <i class="bi bi-stars"></i>
+                </div>
+                <div class="mensagem-conteudo">
+                    <span class="mensagem-remetente">BarberFlow</span>
+                    <p></p>
+                </div>
+            `;
+            const paragrafo = mensagem.querySelector("p");
+            if (permitirHtml) {
+                paragrafo.innerHTML = texto;
+            } else {
+                paragrafo.textContent = texto;
+            }
+        } else { // Mensagem do cliente
+            mensagem.innerHTML = `
+                <div class="mensagem-conteudo">
+                    <p></p>
+                </div>
+            `;
+            mensagem.querySelector("p").textContent = texto; // Cliente sempre texto puro
         }
 
-        formulario.addEventListener("submit", async function(event) {
-            event.preventDefault(); // Impede o recarregamento da página
+        chat.appendChild(mensagem);
+        chat.scrollTop = chat.scrollHeight;
+    }
 
-            const pergunta = campoPergunta.value.trim();
+    function alterarEstadoCarregamento(carregando) {
+        campoPergunta.disabled = carregando;
+        botaoEnviar.disabled = carregando;
+        spinner.classList.toggle("d-none", !carregando);
+        textoEnviar.textContent = carregando ? "Consultando..." : "Enviar";
+    }
 
-            if (!pergunta) {
-                return; // Não envia pergunta vazia
-            }
+    formulario.addEventListener("submit", async function(event) {
+        event.preventDefault();
+        const pergunta = campoPergunta.value.trim();
 
-            adicionarMensagem(pergunta, "cliente");
+        if (!pergunta) return;
 
-            campoPergunta.value = ""; // Limpa o campo de pergunta
-            campoPergunta.disabled = true; // Desabilita o campo enquanto espera
-            botaoEnviar.disabled = true; // Desabilita o botão
-            botaoEnviar.textContent = "Consultando..."; // Muda o texto do botão
+        adicionarMensagem(pergunta, "cliente");
+        campoPergunta.value = "";
+        alterarEstadoCarregamento(true);
 
-            try {
-                const resposta = await fetch("/api/ai-assistant/", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify({
-                        question: pergunta
-                    })
-                });
+        try {
+            const resposta = await fetch("/api/ai-assistant/", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": csrftoken // Adicionado o cabeçalho X-CSRFToken
+                },
+                body: JSON.stringify({
+                    question: pergunta
+                })
+            });
 
-                const dados = await resposta.json();
+            const dados = await resposta.json();
 
-                if (!resposta.ok) { // Verifica se a resposta HTTP foi bem-sucedida (status 2xx)
-                    throw new Error(
-                        dados.error || "Não foi possível obter uma resposta."
-                    );
-                }
-
-                adicionarMensagem(dados.answer, "assistente");
-
-            } catch (erro) {
-                console.error("Erro ao chamar a API:", erro);
-                adicionarMensagem(
-                    erro.message || "Ocorreu um erro. Tente novamente.",
-                    "assistente"
+            if (!resposta.ok) {
+                throw new Error(
+                    dados.error || "Não foi possível obter uma resposta."
                 );
-            } finally {
-                campoPergunta.disabled = false; // Reabilita o campo
-                botaoEnviar.disabled = false; // Reabilita o botão
-                botaoEnviar.textContent = "Enviar"; // Restaura o texto do botão
-                campoPergunta.focus(); // Coloca o foco de volta no campo de pergunta
             }
-        });
-    </script>
-</body>
-</html>
+
+            // Passa a flag 'html' para a função adicionarMensagem
+            adicionarMensagem(
+                dados.answer,
+                "assistente",
+                dados.html === true // Verifica se a API indicou que é HTML
+            );
+
+        } catch (erro) {
+            console.error("Erro ao chamar a API:", erro);
+            adicionarMensagem(
+                erro.message || "Ocorreu um erro. Tente novamente.",
+                "assistente"
+            );
+        } finally {
+            alterarEstadoCarregamento(false);
+            campoPergunta.focus();
+        }
+    });
+</script>
+{% endblock %}
